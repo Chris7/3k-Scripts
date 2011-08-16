@@ -1,3 +1,5 @@
+require "luasql"
+
 function tkm:SqlInsertRoom( RoomId, RoomDesc, RoomScript)
 	RoomDesc = string.gsub(RoomDesc, "'", "''")
 	if RoomScript then
@@ -18,8 +20,8 @@ function tkm:SqlGetRoomDesc( RoomId)
 end
 
 function tkm:SqlFindDesc(RoomDesc)
-	res = assert (con:execute(string.format([[SELECT RoomId FROM Rooms WHERE RoomDesc LIKE '%s']],RoomDesc)))
-	return res:fetch({})
+	local sql = string.format([[SELECT RoomId FROM Rooms WHERE RoomDesc LIKE '%s']],RoomDesc)
+	return assert(con:execute(sql))
 end
 
 function tkm:getRoomScript( RoomId)
@@ -31,8 +33,6 @@ function tkm:resetConn()
 	tkm:closeSql()
 	tkm:initSql()
 end
-
-require "luasql"
 
 function tkm:closeSql()
 	if con then

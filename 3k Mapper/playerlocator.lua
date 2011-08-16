@@ -26,9 +26,10 @@ function getKeys(table)
 end
 
 function doDescFind(desc)
---	desc = string.sub(desc,0,string.find(desc,"\n")-1)
---	display(desc)
-	local pExits = tkm:SqlFindDesc(desc)
+	desc = string.sub(desc,0,string.len(desc)-1)
+	desc = string.split(desc, "\n")
+	local pExits = tkm:SqlFindDesc(desc[1])
+	display(pExits:fetch({}))
 end
 
 function doFind(results, desc)
@@ -40,7 +41,7 @@ function doFind(results, desc)
 		--multiple entries, do room descs
 		display(results)
 		for i,v in pairs(results) do
-			local roomdesc = tkm:SqlGetRoomDesc(v)
+			local res = tkm:SqlGetRoomDesc(v)
 			roomdesc = string.gsub(roomdesc,".\n","")
 			--display(desc)
 			--display(roomdesc)

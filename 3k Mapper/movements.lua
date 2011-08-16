@@ -4,6 +4,7 @@ function onPlayerMove(roomid)
 	lastId = roomid
 	lastx,lasty,lastz = getRoomCoordinates(lastId)
 	UserArea = getRoomArea(roomid)
+	updateRoomInfo()
 end
 
 function onFollow(direction)

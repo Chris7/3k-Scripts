@@ -13,18 +13,46 @@ function doSpeedWalk()
 	return
   end
   exits = getAllExits(lastId)
+  local qtindex = 0
+  local qtpath = ""
   speedWalking = 1
   roomsToWalk = speedWalkPath
   for i,v in pairs(speedWalkPath) do
 	for j,k in pairs(exits) do
 		if v==k then
-			send(j)
-			execRoomScript(v)
+			if necro then
+				if qtindex == 0 then
+					qtpath = j.."/"
+				else
+					qtpath = qtpath..j.."/"
+				end
+				qtindex = qtindex+1
+				local script = tkm:getRoomScript(v)
+				if script then
+					display('script')
+					display(script)
+					qtpath = qtpath..script.."/"
+					qtindex = qtindex+1
+				end
+				if qtindex > 40 then
+					send("qtrance "..qtpath)
+					qtpath = ""
+					qtindex = 0
+				end
+			else
+				send(j)
+--				display(j)
+--				display(qtpath)
+				execRoomScript(v)
+			end
 			lastId = v
 			break
 		end
 	end
     exits = getAllExits(lastId)
+  end
+  if necro then
+    send("qtrance "..qtpath)
   end
   speedwalking = nil
 end
