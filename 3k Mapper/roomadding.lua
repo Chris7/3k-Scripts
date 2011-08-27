@@ -42,7 +42,8 @@ function makeNewRoom( roomname, roomdesc, roomexits, checkedcommand)
 	display(roomname)
 	addRoom( roomID )
 	setRoomName( roomID, convertRoomName(roomname ))
-	tkm:SqlInsertRoom( roomID, roomdesc )
+	setRoomUserData(roomID, "description", roomdesc)
+    --x,y,z and direction
 	xyzd = getCoordsOfDir(roomID, checkedcommand)
 	lastx,lasty,lastz,dirtype = xyzd[1],xyzd[2],xyzd[3],xyzd[4]
 	setRoomCoordinates(roomID, lastx,lasty,lastz)
@@ -68,7 +69,8 @@ end
 function checkLastCommand(lastcommand)
 	--checks if the command sent is in the exits of the current room
 	--returns nil if it exists, otherwise returns the exit we should map
-	--IE IF THIS FUNCTION RETURNS TRUE, THERE IS NO EXIT!
+	--IF THIS FUNCTION RETURNS TRUE, THERE IS NO EXIT!  THIS IS COUNTER-INTUITIVE I KNOW
+    --BUT WORKS EASIER WITH OTHER CODE
 	if firstRoom == true then
 		return 1
 	end

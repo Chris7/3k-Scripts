@@ -28,8 +28,23 @@ end
 function doDescFind(desc)
 	desc = string.sub(desc,0,string.len(desc)-1)
 	desc = string.split(desc, "\n")
-	local pExits = tkm:SqlFindDesc(desc[1])
-	display(pExits:fetch({}))
+	local pExits = searchRoomUserData("description", desc[1])
+	local count = 0
+	local roomId
+	if (pExits) then
+		for i,v in pairs(pExits) do
+			count = count+1
+			roomId = i
+			if count > 1 then
+				break
+			end
+		end
+		if (count == 1) then
+			onPlayerMove(roomId)
+		else
+			display(pExits)
+		end
+	end
 end
 
 function doFind(results, desc)
@@ -39,9 +54,9 @@ function doFind(results, desc)
 		comTable = {}
 	else
 		--multiple entries, do room descs
-		display(results)
+		--display(results)
 		for i,v in pairs(results) do
-			local res = tkm:SqlGetRoomDesc(v)
+			local roomdesc = getRoomUserData(v, "description")
 			roomdesc = string.gsub(roomdesc,".\n","")
 			--display(desc)
 			--display(roomdesc)

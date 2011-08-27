@@ -6,7 +6,7 @@ function doSpeedWalk()
     speedWalkPath[i] = tonumber(speedWalkPath[i])
   end
   if mouseLocation then
-	display("mouse location")
+	display("room set to mouse location")
 	mouseLocation = nil
 	lastId = speedWalkPath[table.getn(speedWalkPath)]
 	onPlayerMove(lastId)
@@ -27,13 +27,13 @@ function doSpeedWalk()
 					qtpath = qtpath..j.."/"
 				end
 				qtindex = qtindex+1
-				local script = tkm:getRoomScript(v)
-				if script then
-					display('script')
-					display(script)
+				local script = getRoomUserData(v, "script")
+				if script ~= '' then
+					--display(script)
 					qtpath = qtpath..script.."/"
 					qtindex = qtindex+1
 				end
+                --we only do qtindex of 40 because scripts might have multiple commands in them
 				if qtindex > 40 then
 					send("qtrance "..qtpath)
 					qtpath = ""
@@ -58,9 +58,9 @@ function doSpeedWalk()
 end
 
 function execRoomScript(roomId)
-	local script = tkm:getRoomScript(roomId)
-	if script then
-		display(script)
+	local script = getRoomUserData(roomId, "script")
+	if script ~= '' then
+		--display(script)
 		send(script)
 	end
 end

@@ -19,15 +19,8 @@ function doRoomDelete(roomId)
 		end
 	end
 	deleteRoom(roomId)
-	tkm:sqlDeleteRoom(roomId)
 end
 
-
--------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external Scripts --
--------------------------------------------------
 --[[
 colorMappings = {red={0, 255, 0, 0}, green={1, 0, 255, 0}, blue={2, 0, 0, 255},
  yellow={3, 255, 255, 0}, cyan={4, 0, 255, 255}, magenta={5, 255, 0, 255}, default={6, 255, 0,0}}
@@ -95,12 +88,12 @@ function tkm.roomLabel(input)
     echo("We don't know where we are to make a label here.") return
   end
 
-  local x,y = getRoomCoordinates(room)
+  local x,y, z = getRoomCoordinates(room)
   local f1,f2,f3 = unpack(color_table[fg])
   local b1,b2,b3 = unpack(color_table[bg])
 
   -- finally: do it :)
 
-  local lid = createMapLabel(getRoomArea(room), message, x, y, f1,f2,f3, b1,b2,b3)
+  local lid = createMapLabel(getRoomArea(room), message, x, y, z, f1,f2,f3, b1,b2,b3)
   echo(string.format("Created new label #%d '%s' in %s.", lid, message, getRoomAreaName(getRoomArea(room))))
 end

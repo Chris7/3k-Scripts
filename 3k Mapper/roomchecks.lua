@@ -60,11 +60,9 @@ end
 function checkRoomInfo(roomId, roomdesc, roomname)
 	--checks the the supplied roomdesc and name are the same as roomId
 	local name = getRoomName(roomId)
-	local desc = tkm:SqlGetRoomDesc(roomId)
-	display(name)
-	display(desc)
+	local desc = getRoomUserData(roomId, "description")
 	if ((roomname == name) or (removeRoomExits(roomname) == removeRoomExits(name)))
-	 and ((roomdesc == desc) or (removeBreaks(roomdesc) == removeSqlBreaks(desc))) then
+	 and ((roomdesc == desc) or (removeBreaks(roomdesc) == removeDescBreaks(desc))) then
 		return roomId
 	else
 		return nil

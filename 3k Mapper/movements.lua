@@ -9,7 +9,7 @@ end
 
 function onFollow(direction)
 	--direction populated when we are following, otherwise we're looking
-	--a1t the player's input via comTable
+	--at the player's input via comTable
 	if direction then
 		checkLastCommand(direction)
 		onPlayerMove(lastId)
