@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.0">
+    <TriggerPackage/>
+    <TimerPackage/>
+    <AliasPackage/>
+    <ActionPackage/>
+    <ScriptPackage>
+        <ScriptGroup isActive="yes" isFolder="yes">
+            <name>Map Window</name>
+            <packageName></packageName>
+            <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+</script>
+            <eventHandlerList/>
+            <Script isActive="yes" isFolder="no">
+                <name>Load Map settings</name>
+                <packageName></packageName>
+                <script>mapwin = mapwin or {}
+mapwin.windows = mapwin.windows or {}
+mapwin.labelbox = mapwin.labelbox or {}
+mapwin.labels = mapwin.labels or {}
+mapwin.labelWidth = 100
+mapwin.labelHeight = 25
+mapwin.windowlist = {&quot;Map&quot;, &quot;Room Info&quot;}
+mapwin.width = &quot;420&quot;
+mapwin.height = &quot;300&quot;
+mapwin.border = 25
+favorites = {}
+favorites.labels = {}
+
+function mapwinResetUI()
+  width, height = getMainWindowSize()
+  mapwin.container = Geyser.Container:new({
+    fontSize = 8,
+    x=width-mapwin.width-mapwin.border,
+    y=height-mapwin.height-mapwin.border,
+    width=mapwin.width,
+    height=mapwin.height,
+    name=&quot;mapwinWindow&quot;,
+  })
+end
+
+function mapwinSwitch(win)
+	local oldwin = mapwin.currentWindow
+	if oldwin then
+		mapwin.windows[oldwin]:hide()
+		mapwin.labels[oldwin]:setColor(50,50,50)
+		mapwin.labels[oldwin]:echo(oldwin, &quot;white&quot;, &quot;c&quot;)
+	end
+	mapwin.currentWindow = win
+	mapwin.windows[win]:show()
+	mapwin.labels[win]:setColor(0,125,0)
+	mapwin.labels[win]:echo(win, &quot;cyan&quot;, &quot;c&quot;)
+end
+
+function mapwin:create()
+  --reset the UI
+  mapwinResetUI()
+  --iterate the table of channels and create some windows and tabs
+  for i,tab in ipairs(mapwin.windowlist) do
+    mapwin.labels[tab] = Geyser.Label:new({
+      name=string.format(&quot;label%s&quot;, tab),
+		x=mapwin.labelWidth*i,
+		y=0,
+		width=mapwin.labelWidth,
+		height=mapwin.labelHeight,
+		nestable=true
+    }, mapwin.container)
+    mapwin.labels[tab]:echo(tab, &quot;white&quot;, &quot;c&quot;)
+    mapwin.labels[tab]:setColor(50,50,50)
+    mapwin.labels[tab]:setClickCallback(&quot;mapwinSwitch&quot;, tab)
+    if tab == &quot;Map&quot; then
+ 	mapwin.windows[tab] = Geyser.Mapper:new({
+      x = 0,
+      y = mapwin.labelHeight,
+      height = &quot;100%&quot;,
+      width = &quot;100%&quot;,
+      name = string.format(&quot;mapwin%s&quot;, tab),
+    }, mapwin.container)
+    mapwin.windows[tab]:hide()
+    else
+    mapwin.windows[tab] = Geyser.MiniConsole:new({
+      x = 0,
+      y = mapwin.labelHeight,
+      height = &quot;100%&quot;,
+      width = &quot;100%&quot;,
+      name = string.format(&quot;mapwin%s&quot;, tab),
+    }, mapwin.container)
+    mapwin.windows[tab]:setFontSize(8)
+    mapwin.windows[tab]:setColor(0,0,0)
+    mapwin.windows[tab]:setWrap(60)
+    mapwin.windows[tab]:hide()
+    end
+  end
+  mapwinSwitch(&quot;Map&quot;)
+end
+
+function mapwinClearWindow(win)
+	clearUserWindow(string.format(&quot;mapwin%s&quot;, win))
+end
+
+function mapwinAppendWindow(win, text)
+	mapwin.windows[win]:cecho(text)
+end
+
+function mapwinAppendWindowClickable(win, text, command, tip)
+	echoLink(mapwin.windows[win].name, text, command, tip)
+end
+
+function updateRoomInfo()
+   mapwinClearWindow(&quot;Room Info&quot;)
+   updatedesc = getRoomUserData( tmap.lastId, &quot;description&quot;)
+   local exits = getAllExits(tmap.lastId)
+	local exitlist = &quot;Exits: &quot;
+   updatedesc = string.gsub(updatedesc, &quot;.\n&quot;, &quot; &quot;)
+   mapwinAppendWindow(&quot;Room Info&quot;, &quot;&lt;cyan&gt;&quot;..updatedesc..&quot;\n&quot;)
+	local exitlen = 0 --for wrapping
+   if exits then
+		for v,i in pairs(exits) do
+			exitlen = exitlen+string.len(i)
+			if exitlen &gt; 30 then
+				mapwinAppendWindow(&quot;Room Info&quot;, &quot;\n&quot;)
+				exitlen=0
+			end
+			mapwinAppendWindowClickable(&quot;Room Info&quot;, i..&quot;, &quot;, [[send(&quot;]]..i..[[&quot;);onFollow(&quot;]]..i..[[&quot;)]], i)
+		end
+	end
+end
+
+mapwin:create()</script>
+                <eventHandlerList/>
+            </Script>
+            <Script isActive="yes" isFolder="no">
+                <name>onFavorite</name>
+                <packageName></packageName>
+                <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+function onFavorite(...)
+	gotoRoom(tonumber(arg[7]))
+end</script>
+                <eventHandlerList>
+                    <string>onFavorite</string>
+                </eventHandlerList>
+            </Script>
+            <Script isActive="yes" isFolder="no">
+                <name>Create Favorites</name>
+                <packageName></packageName>
+                <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+function setupFavorites()
+    favTable = searchRoomUserData(&quot;favorite&quot;, &quot;&quot;)
+    favSorted = {}
+    unsorted = {}
+    addMapMenu(&quot;Favorites&quot;)
+    for i,v in pairs(favTable) do
+    --repetitive but straightforward implementation
+        local entry = string.split(v,'|||')
+        local name, fav, room, parent = entry[1],entry[2],entry[3],entry[4]
+        if parent then
+            favSorted[parent] = favSorted[parent] or {}
+            favSorted[parent][fav]={name,room}
+        else
+    --		unsorted
+        end
+    --add parents to their respective list so the player can actually click on them
+    end
+    if favSorted['-1'] then
+    for i,v in pairs(favSorted['-1']) do
+        if favSorted[i] then
+            --designate -1 so we can keep the parent in order
+            favSorted[i]['-1']={v[1], v[2]}
+        end
+    end
+	end
+	 nestItem=0
+    for i,v in pairs(favSorted) do
+		if v[&quot;-1&quot;] then
+				local k=v[&quot;-1&quot;]
+				local nest = k[1]..tostring(k[2])..tostring(nestItem)
+				addMapMenu(nest, &quot;Favorites&quot;, k[1])
+				for j,t in pairs(v) do
+					if j~=&quot;-1&quot; then
+						local entry=t[1]..tostring(t[2])..tostring(j)
+						addMapEvent(entry, &quot;onFavorite&quot;, nest, t[1], t[2])
+					end
+				end	
+				nestItem=nestItem+1			
+        else
+				for j,k in pairs(v) do
+					addMapEvent(k[1]..tostring(k[2]), &quot;onFavorite&quot;, &quot;Favorites&quot;, k[1], k[2])
+				end
+			end
+
+    end
+end
+
+setupFavorites()</script>
+                <eventHandlerList/>
+            </Script>
+        </ScriptGroup>
+    </ScriptPackage>
+    <KeyPackage>
+        <HelpPackage>
+            <helpURL></helpURL>
+            <helpHTML></helpHTML>
+        </HelpPackage>
+    </KeyPackage>
+</MudletPackage>
