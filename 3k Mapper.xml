@@ -47,7 +47,7 @@
                     <colorTriggerBgColor>#000000</colorTriggerBgColor>
                     <regexCodeList/>
                     <regexCodePropertyList/>
-                    <Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+                    <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
                         <name>roomexits</name>
                         <script>tmap.exits=&quot;&quot;
 tmap.roomdesc=string.trim(tmap.roomdesc)
@@ -83,7 +83,7 @@ disableTrigger(&quot;roomexits&quot;)</script>
                             <integer>1</integer>
                         </regexCodePropertyList>
                     </Trigger>
-                    <Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="yes" isColorTriggerFg="yes" isColorTriggerBg="yes">
+                    <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="yes" isColorTriggerFg="yes" isColorTriggerBg="yes">
                         <name>roomdescription</name>
                         <script>if matches[1] then
 	tmap.roomdesc = tmap.roomdesc..matches[1]..&quot;\n&quot;
@@ -236,7 +236,14 @@ send(&quot;look&quot;)</script>
                 </Trigger>
                 <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
                     <name>Too dark</name>
-                    <script>if tmap.mapfollow and tmap.findme == nil then
+                    <script>tmap.roomEntered = true
+if tmap:mapon() then
+	tmap:echo(&quot;TURN ON A LIGHT!!!!!!!!&quot;)
+	tmap.exits=&quot;&quot;
+	tmap.roomdesc=&quot;&quot;
+	tmap.roomname=&quot;A Dark Room&quot;
+	tmap:processExits(nil)
+elseif tmap.mapfollow and tmap.findme == nil then
 	tmap:onFollow(nil)
 end</script>
                     <triggerType>0</triggerType>
@@ -816,9 +823,9 @@ send(&quot;look&quot;)</script>
                     <name>Delete Temporary Rooms</name>
                     <script>local rooms = searchRoomUserData(&quot;temporary&quot;, 1)
 for i,v in pairs(rooms) do
-	display(i)
-	display(v)
-end</script>
+	deleteRoom(i)
+end
+updateMap()</script>
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap delTemp$</regex>
@@ -891,6 +898,28 @@ tmap:echo(&quot;'&lt;red&gt;setroom xxx&lt;reset&gt;', '&lt;red&gt;roominfo&lt;r
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Room exit trigger setup</name>
+                    <script>--this is more or less a shortcut for the common use of an exit script:
+setRoomUserData(tmap.lastId, &quot;exitScript&quot;..matches[2], &quot;tempTrigger(&quot;..matches[3]..&quot;, [[tmap:onFollow(nil)]],true)&quot;)</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^tmap automove &quot;(.+)&quot; .+$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>clear room exit script</name>
+                    <script>setRoomUserData(tmap.lastId, &quot;exitScript&quot;..matches[2], &quot;&quot;)</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^tmap clearexit (.+)$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Pause speedwalk</name>
+                    <script>setRoomUserData(tmap.lastId, &quot;exitScript&quot;..matches[2], &quot;tmap.moveStop=1;tempTrigger(&quot;..matches[3]..&quot;, [[tmap.moveStop=nil;speedWalkPath = tmap.roomsToWalk;doSpeedWalk()]],true)&quot;)</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^tmap pauseUntil &quot;(.+)&quot; (.+)$</regex>
                 </Alias>
             </AliasGroup>
         </AliasGroup>
@@ -1122,8 +1151,8 @@ end</script>
 			else
 				send(j)
 				tmap:checkExitScript(v,j)
-				local stopMoving = tmap:onPlayerMove(v)
-				if stopMoving then
+				tmap:onPlayerMove(v)
+				if tmap.moveStop then
 					return
 				end
 			end
@@ -1353,9 +1382,9 @@ end
 		end
 		local luaScript = getRoomUserData(roomid, &quot;luascript&quot;)
 		if luaScript ~= &quot;&quot; then
-			local moveStop = tmap:execLua(luaScript)
-			if moveStop then
-				return moveStop
+			tmap.moveStop = tmap:execLua(luaScript)--return 1 from a luaScript to indicate a wait
+			if tmap.moveStop then
+				return tmap.moveStop
 			end
 		end
 		if (getMapVar()[&quot;RoomId&quot;] and tmap.lastId) then
@@ -1517,6 +1546,7 @@ function tmap:playerFound(roomId)
 	tmap:echo(&quot;Found&quot;)
 	tmap:onPlayerMove(roomId)
 	tmap.findme = nil
+	tmap.comTable = {}
 end
 
 function tmap:onFindMe(name, desc, exits)
