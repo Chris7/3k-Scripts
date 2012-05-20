@@ -136,7 +136,7 @@ tmap.roomEntered = true</script>
                         <colorTriggerFgColor>#00ff00</colorTriggerFgColor>
                         <colorTriggerBgColor>#000000</colorTriggerBgColor>
                         <regexCodeList>
-                            <string>&gt;?(.+)(\s+)?¡</string>
+                            <string>3?s?&gt;?`?(.+)(\s+)?¡</string>
                         </regexCodeList>
                         <regexCodePropertyList>
                             <integer>1</integer>
@@ -431,7 +431,7 @@ end</script>
                     <script>--show room exits
 tmap:echo(getRoomExits(tmap.lastId))
 tmap:echo(&quot;special exits:\n&quot;)
-tmap:echo(getSpecialExitsSwapTable(tmap.lastId))</script>
+tmap:echo(getSpecialExitsSwap(tmap.lastId))</script>
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap showexits$</regex>
@@ -1098,11 +1098,10 @@ end
 function tmap:getAllExits(roomId)
    local exits = getRoomExits(roomId)
 	local sexits = {}
-   for i,v in pairs(getSpecialExitsSwapTable(roomId)) do
-		for j,k in pairs(v) do
-			sexits[i]=j
-		end
+   for i,v in pairs(getSpecialExits(roomId)) do
+		sexits[i]=v
 	end
+	sexits = tmap:swapKeysValues(sexits)
    return tmap:concatTables(exits,sexits)
 end</script>
                     <eventHandlerList/>
@@ -1196,6 +1195,8 @@ tmap.fulldirtable = tmap:Set {&quot;northwest&quot;, &quot;north&quot;, &quot;no
 	&quot;south&quot;, &quot;southeast&quot;, &quot;up&quot;, &quot;down&quot;}
 tmap.dirtypes = {north=1, northeast=2, northwest=3, east=4, west=5,
 	south=6, southeast=7, southwest=8, up=9, down=10, [&quot;in&quot;]=11, out=12}
+tmap.carddirtypes = {north=1, northeast=2, northwest=3, east=4, west=5,
+	south=6, southeast=7, southwest=8, up=9, down=10}
 
 tmap.dirnums = {[1]=&quot;north&quot;, [2]=&quot;northeast&quot;, [3]=&quot;northwest&quot;,[4]=&quot;east&quot;,
 	[5]=&quot;west&quot;,[6]=&quot;south&quot;,[7]=&quot;southeast&quot;,[8]=&quot;southwest&quot;,[9]=&quot;up&quot;,[10]=&quot;down&quot;}
@@ -1216,9 +1217,9 @@ tmap.reversedir = {[1]=6, [2]=8, [3]=7,[4]=5,[5]=4,[6]=1,[7]=3,[8]=2,[9]=10,[10]
 tmap.speedwalking = nil
 tmap.mapspecial = nil
 tmap.mapfollow = 1
-local vars = getMapVar()
-if vars['RoomId'] then
-	tmap.lastId = vars['RoomId']
+local var = getMapLocation()
+if var then
+	tmap.lastId = var
 	tmap.UserArea=getRoomArea(tmap.lastId)
 	centerview(tmap.lastId)
 end</script>
@@ -1387,14 +1388,11 @@ end
 				return tmap.moveStop
 			end
 		end
-		if (getMapVar()[&quot;RoomId&quot;] and tmap.lastId) then
-			local mapw=tonumber(getMapVar(&quot;mWidth&quot;))/2
-			local maph=tonumber(getMapVar(&quot;mHeight&quot;))/2
+		if (tmap.lastId) then
+			local mapw,maph = getMapSize()
 			local x,y,z
-			setMapVar(&quot;RoomId&quot;,roomid)
-			x=getMapVar(&quot;XView&quot;)
-			y=getMapVar(&quot;YView&quot;)*-1
-			z=getMapVar(&quot;ZView&quot;)
+			setMapLocation(roomid)
+			x,y,z = getMapCoords()
 			tmap.lastx,tmap.lasty,tmap.lastz = getRoomCoordinates(tmap.lastId)
 			local cArea = getRoomArea(roomid)
 			if tmap.lastz ~= z or cArea ~= tmap.UserArea or y&gt;(tmap.lasty+maph) or y&lt;(tmap.lasty-maph) or x&gt;(tmap.lastx+mapw) or x&lt;(tmap.lastx-mapw) then
@@ -1687,12 +1685,12 @@ end
     --make exit stubs
     local existingExits = getRoomExits(roomID)
     for i,v in pairs(newexits) do
-		  if tmap.dirtypes[v] then
-	        if #existingExits == 0 and tmap.dirtypes[v] &lt; 11 then
-   	         setExitStub(roomID, tmap.dirtypes[v],1)
+		  if tmap.carddirtypes[v] then
+	        if #existingExits == 0 and tmap.carddirtypes[v] &lt; 11 then
+   	         setExitStub(roomID, tmap.carddirtypes[v],1)
    	     else
-   	         if not existingExits[v] and tmap.dirtypes[v] &lt; 11 then
-   	             setExitStub(roomID, tmap.dirtypes[v],1)
+   	         if not existingExits[v] and tmap.carddirtypes[v] &lt; 11 then
+   	             setExitStub(roomID, tmap.carddirtypes[v],1)
    	         end
    	     end
 		  end
@@ -1725,7 +1723,7 @@ function tmap:makeNewRoom( roomname, roomdesc, roomexits, checkedcommand)
 	setRoomCoordinates(roomID, tmap.lastx,tmap.lasty,tmap.lastz)
 	if tmap.firstRoom == false then
 		if tmap.mapspecial then
-			tmap:addSpecialExit(tmap.lastId,roomID,tmap.specialexitcommand)
+			addSpecialExit(tmap.lastId,roomID,tmap.specialexitcommand)
 			tmap.mapspecial = nil
 		else 
 			setExit(tmap.lastId, roomID, tmap.dirtype)
@@ -1744,12 +1742,12 @@ function tmap:makeNewRoom( roomname, roomdesc, roomexits, checkedcommand)
     --make exit stubs
     local existingExits = getRoomExits(roomID)
     for i,v in pairs(newexits) do
-		if tmap.dirtypes[v] then
-        if #existingExits == 0 and tmap.dirtypes[v] then
-            setExitStub(roomID, tmap.dirtypes[v],1)
+		if tmap.carddirtypes[v] then
+        if #existingExits == 0 and tmap.carddirtypes[v] then
+            setExitStub(roomID, tmap.carddirtypes[v],1)
         else
-            if not existingExits[v] and tmap.dirtypes[v] then
-                setExitStub(roomID, tmap.dirtypes[v],1)
+            if not existingExits[v] and tmap.carddirtypes[v] then
+                setExitStub(roomID, tmap.carddirtypes[v],1)
             end
         end
 		end
@@ -1931,23 +1929,12 @@ function tmap:checkExit(roomId, dir)
 	if roomId == nil then
 		return nil
 	end
-	local exits = getRoomExits(roomId)
+	local exits = tmap:getAllExits(roomId)
 	for i,v in pairs(exits or {}) do
 		if i == dir then
 			--set lastId to the room we are moving to and coords
-			--check if we have an exit script
 			tmap:checkExitScript(roomId, i)
 			return v
-		end
-	end
-	local exits = getSpecialExitsSwapTable(roomId)
-	for i,v in pairs(exits or {}) do
-		if i == dir then
-			--set lastId to the room we are moving to and coords
-			for j,status in pairs(v) do
-				tmap:checkExitScript(roomId, i)
-				return j
-			end
 		end
 	end
 	return nil
