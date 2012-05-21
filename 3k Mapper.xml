@@ -49,8 +49,7 @@
                     <regexCodePropertyList/>
                     <Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
                         <name>roomexits</name>
-                        <script>
-tmap.exits=&quot;&quot;
+                        <script>tmap.exits=&quot;&quot;
 tmap.roomdesc=string.trim(tmap.roomdesc)
 if (matches[6]) then
 	if (string.find(matches[6],&quot;§&quot;)) then	
@@ -111,8 +110,7 @@ setTriggerStayOpen(&quot;roomdescription&quot;, 1)</script>
                     </Trigger>
                     <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="yes" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="yes" isColorTriggerFg="yes" isColorTriggerBg="yes">
                         <name>roomname</name>
-                        <script>
-local match = matches[2]
+                        <script>local match = matches[2]
 tmap.compassSpace = string.len(matches[2])
 tmap.roomname = string.trim(matches[2])
 tmap.roomdesc = &quot;&quot;
@@ -499,7 +497,7 @@ end</script>
                 <Alias isActive="yes" isFolder="no">
                     <name>Map Special Exit</name>
                     <script>tmap.specialexitcommand = matches[2]
-tmap.specialdirection = tmap:dirShortToLong(matches[3])
+tmap.specialdirection = matches[3]
 tmap.mapspecial = 1
 send(tmap.specialexitcommand)</script>
                     <command></command>
@@ -936,11 +934,15 @@ setRoomUserData(tmap.lastId, &quot;exitScript&quot;..matches[2], &quot;tempTrigg
             <ScriptGroup isActive="yes" isFolder="yes">
                 <name>3k Mapper</name>
                 <packageName></packageName>
-                <script>
+                <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
 mudlet = mudlet or {}; mudlet.mapper_script = true
-
-tmap = tmap or {}
-</script>
+if not tmap then
+	tmap = {}
+end</script>
                 <eventHandlerList/>
                 <Script isActive="yes" isFolder="no">
                     <name>onEventHandler</name>
@@ -959,22 +961,33 @@ tmap = tmap or {}
 end
 
 function tmap:checkCommand(arg)
-
-	-- Check for no command given at all
-	if arg == &quot;&quot; then 
-		return nil 
+	if arg == &quot;e&quot; then
+		arg = &quot;east&quot;
+	elseif arg == &quot;w&quot; then
+		arg = &quot;west&quot;
+	elseif arg == &quot;s&quot; then
+		arg = &quot;south&quot;
+	elseif arg == &quot;n&quot; then
+		arg = &quot;north&quot;
+	elseif arg == &quot;ne&quot; then
+		arg = &quot;northeast&quot;
+	elseif arg == &quot;nw&quot; then
+		arg = &quot;northwest&quot;
+	elseif arg == &quot;se&quot; then
+		arg = &quot;southeast&quot;
+	elseif arg == &quot;sw&quot; then
+		arg = &quot;southwest&quot;
+	elseif arg == &quot;u&quot; then
+		arg = &quot;up&quot;
+	elseif arg == &quot;d&quot; then
+		arg = &quot;down&quot;
 	end
-
-	arg = tmap:dirShortToLong(arg)
-
 	if tmap:checkExit(tmap.lastId,arg) then
 		return arg
 	end
-
 	if tmap.fulldirtable[arg] or tmap.dirtable[arg] then
 		return arg
 	end
-
 	return nil
 end
 </script>
@@ -1090,32 +1103,6 @@ function tmap:getAllExits(roomId)
 	end
 	sexits = tmap:swapKeysValues(sexits)
    return tmap:concatTables(exits,sexits)
-end
-
-function tmap:dirShortToLong(arg)
-	if arg == &quot;e&quot; then
-		arg = &quot;east&quot;
-	elseif arg == &quot;w&quot; then
-		arg = &quot;west&quot;
-	elseif arg == &quot;s&quot; then
-		arg = &quot;south&quot;
-	elseif arg == &quot;n&quot; then
-		arg = &quot;north&quot;
-	elseif arg == &quot;ne&quot; then
-		arg = &quot;northeast&quot;
-	elseif arg == &quot;nw&quot; then
-		arg = &quot;northwest&quot;
-	elseif arg == &quot;se&quot; then
-		arg = &quot;southeast&quot;
-	elseif arg == &quot;sw&quot; then
-		arg = &quot;southwest&quot;
-	elseif arg == &quot;u&quot; then
-		arg = &quot;up&quot;
-	elseif arg == &quot;d&quot; then
-		arg = &quot;down&quot;
-	end
-
-	return arg
 end</script>
                     <eventHandlerList/>
                 </Script>
@@ -1241,7 +1228,11 @@ end</script>
                 <Script isActive="yes" isFolder="no">
                     <name>Color Mappings</name>
                     <packageName></packageName>
-                    <script>
+                    <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
 --[[
 colorMappings = {red={0, 255, 0, 0}, green={1, 0, 255, 0}, blue={2, 0, 0, 255},
  yellow={3, 255, 255, 0}, cyan={4, 0, 255, 255}, magenta={5, 255, 0, 255}, default={6, 255, 0,0}}
@@ -1296,7 +1287,11 @@ customEnvColors[257] = mpHost-&gt;mRed_2;
 end
 
 
-
+-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
 --[[
 colorMappings = {red={0, 255, 0, 0}, green={1, 0, 255, 0}, blue={2, 0, 0, 255},
  yellow={3, 255, 255, 0}, cyan={4, 0, 255, 255}, magenta={5, 255, 0, 255}, default={6, 255, 0,0}}
@@ -1411,7 +1406,6 @@ end
 		tmap.lastId = roomid
 		tmap.UserArea = getRoomArea(roomid)
 --		updateRoomInfo()
-		centerview(roomid)
 	end
 end
 
@@ -1717,7 +1711,7 @@ end
 function tmap:makeNewRoom( roomname, roomdesc, roomexits, checkedcommand)
 	--makes a new room obviously
 	local roomID  = createRoomID()
-	--tmap:echo(&quot;making new room&quot;..roomname)
+	tmap:echo(&quot;making new room&quot;..roomname)
 	addRoom( roomID )
 	setRoomName( roomID, tmap:convertRoomName(roomname ))
 	setRoomUserData(roomID, &quot;description&quot;, roomdesc)
@@ -1821,7 +1815,6 @@ end
        if tmap.firstRoom == false then
 			tmap.lastx,tmap.lasty,tmap.lastz = getRoomCoordinates(tmap.lastId)
 			local collisions = tmap:checkCoords(tmap.lastId, tmap.checkedcommand, roomname, roomdesc)
-
 			if collisions then
 				--there was an overlapping room AND an exit existed to it.
 				--or room was the same as we made the exit within checkCoords function
@@ -1840,20 +1833,13 @@ end
 end
 
 function tmap:checkCoords(RoomId, dir, roomname, roomdesc)
-
 	--check if a room exists already in the proposed direction
 	--and if so and rooms match, will create an exit for that room
-	local dir = tmap:dirShortToLong(dir)
-
 	local dirtype=tmap.dirtypes[dir]
-
 	if dirtype == nil then
 		return 0
 	end
-
-
 	local dirlocation = tmap.diroffset[dirtype]
-
 	if dirlocation == nil then
 		tmap:calculateMapOffset()
 		dirlocation = tmap.diroffset[dirtype]
@@ -1965,7 +1951,11 @@ end</script>
                 <Script isActive="yes" isFolder="no">
                     <name>Process Exits</name>
                     <packageName></packageName>
-                    <script>
+                    <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
 function tmap:processExits(exits)
 	if tmap.findme == nil and tmap.pWimpy==nil and tmap.searchMode==nil then
 		tmap:onCheckRoom(tmap.roomname, tmap.roomdesc, tmap.exits)
@@ -1983,7 +1973,11 @@ end</script>
                 <Script isActive="yes" isFolder="no">
                     <name>setPlayerLocation</name>
                     <packageName></packageName>
-                    <script>
+                    <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
 function setPlayerLocation(event, roomid)
 	tmap:echo(&quot;Setting location to:&lt;cyan&gt;&quot;..roomid..&quot;&lt;reset&gt;&quot;)
 	tmap:onPlayerMove(roomid)
