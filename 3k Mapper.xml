@@ -498,6 +498,9 @@ end</script>
                     <name>Map Special Exit</name>
                     <script>tmap.specialexitcommand = matches[2]
 tmap.specialdirection = matches[3]
+if tmap.shortToLong[tmap.specialdirection] then
+	tmap.specialdirection = tmap.shortToLong[tmap.specialdirection]
+end
 tmap.mapspecial = 1
 send(tmap.specialexitcommand)</script>
                     <command></command>
@@ -620,8 +623,16 @@ end
 zoneId = zoneId+1
 setAreaName(zoneId, Name)
 setRoomArea( tmap.lastId, zoneId )
+for i,v in pairs(tmap:getAllExits(tmap.lastId)) do
+	tmap:label(tostring(v)..Name)
+	display(Name)
+end
 tmap.UserArea=zoneId
-centerview(tmap.lastId)</script>
+tmap:onPlayerMove(tmap.lastId)
+for i,v in pairs(tmap:getAllExits(tmap.lastId)) do
+	tmap:label(tmap.lastId..getRoomArea(v))
+	display(getRoomArea(v))
+end</script>
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap movenewarea (.*)$</regex>
@@ -1193,6 +1204,9 @@ tmap.comTable = {}
 tmap.dirtable = tmap:Set {&quot;nw&quot;,&quot;n&quot;,&quot;ne&quot;,&quot;w&quot;,&quot;e&quot;,&quot;sw&quot;,&quot;s&quot;,&quot;se&quot;,&quot;u&quot;,&quot;d&quot;}
 tmap.fulldirtable = tmap:Set {&quot;northwest&quot;, &quot;north&quot;, &quot;northeast&quot;, &quot;west&quot;, &quot;east&quot;, &quot;southwest&quot;,
 	&quot;south&quot;, &quot;southeast&quot;, &quot;up&quot;, &quot;down&quot;}
+tmap.shortToLong = {[&quot;n&quot;]=&quot;north&quot;, [&quot;ne&quot;]=&quot;northeast&quot;,[&quot;east&quot;]=&quot;east&quot;,
+						 [&quot;se&quot;]=&quot;southeast&quot;,[&quot;s&quot;]=&quot;south&quot;,[&quot;sw&quot;]=&quot;southwest&quot;,
+						 [&quot;w&quot;]=&quot;west&quot;,[&quot;nw&quot;]=&quot;northeast&quot;,[&quot;u&quot;]=&quot;up&quot;,[&quot;d&quot;]=&quot;down&quot;}
 tmap.dirtypes = {north=1, northeast=2, northwest=3, east=4, west=5,
 	south=6, southeast=7, southwest=8, up=9, down=10, [&quot;in&quot;]=11, out=12}
 tmap.carddirtypes = {north=1, northeast=2, northwest=3, east=4, west=5,
