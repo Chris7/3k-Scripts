@@ -324,7 +324,7 @@ end</script>
                 <packageName></packageName>
                 <regex></regex>
                 <Alias isActive="yes" isFolder="no">
-                    <name>purgecom</name>
+                    <name>Purge exit queue</name>
                     <script>--[[This will clear the direction queue]]
 tmap.comTable = {}
 tmap.roomsToWalk = nil</script>
@@ -335,6 +335,7 @@ tmap.roomsToWalk = nil</script>
                 <Alias isActive="yes" isFolder="no">
                     <name>firstroom</name>
                     <script>tmap.firstRoom = true
+tmap.lastId = nil
 tmap.comTable = {}
 send(&quot;brief map&quot;)
 tmap:echo(&quot;&lt;red&gt;Now enter a cardinal direction to start the mapping process.&lt;reset&gt;&quot;)
@@ -498,6 +499,9 @@ end</script>
                     <name>Map Special Exit</name>
                     <script>tmap.specialexitcommand = matches[2]
 tmap.specialdirection = matches[3]
+if tmap.shortToLong[tmap.specialdirection] then
+	tmap.specialdirection = tmap.shortToLong[tmap.specialdirection]
+end
 tmap.mapspecial = 1
 send(tmap.specialexitcommand)</script>
                     <command></command>
@@ -620,8 +624,17 @@ end
 zoneId = zoneId+1
 setAreaName(zoneId, Name)
 setRoomArea( tmap.lastId, zoneId )
+local linked = {}
+for i,v in pairs(tmap:getAllExits(tmap.lastId)) do
+	tmap:roomLabel(tostring(v)..&quot; &quot;..Name)
+	local toArea = getRoomAreaName(v)
+	if not linked[toArea] then
+		tmap:roomLabel(tmap.lastId..&quot; &quot;..toArea)
+		linked[toArea] = true
+	end
+end
 tmap.UserArea=zoneId
-centerview(tmap.lastId)</script>
+tmap:onPlayerMove(tmap.lastId)</script>
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap movenewarea (.*)$</regex>
@@ -1010,6 +1023,15 @@ function tmap:tlen(t)
 	return len
 end
 
+function tmap:getAreaName(id)
+	for i,v in pairs(getAreaTable()) do
+		if id == v then
+			return i
+		end
+	end
+	return &quot;&quot;
+end
+
 function tmap:echo(arg)
 	if arg then
 		cecho(arg..&quot;\n&quot;)
@@ -1193,6 +1215,9 @@ tmap.comTable = {}
 tmap.dirtable = tmap:Set {&quot;nw&quot;,&quot;n&quot;,&quot;ne&quot;,&quot;w&quot;,&quot;e&quot;,&quot;sw&quot;,&quot;s&quot;,&quot;se&quot;,&quot;u&quot;,&quot;d&quot;}
 tmap.fulldirtable = tmap:Set {&quot;northwest&quot;, &quot;north&quot;, &quot;northeast&quot;, &quot;west&quot;, &quot;east&quot;, &quot;southwest&quot;,
 	&quot;south&quot;, &quot;southeast&quot;, &quot;up&quot;, &quot;down&quot;}
+tmap.shortToLong = {[&quot;n&quot;]=&quot;north&quot;, [&quot;ne&quot;]=&quot;northeast&quot;,[&quot;east&quot;]=&quot;east&quot;,
+						 [&quot;se&quot;]=&quot;southeast&quot;,[&quot;s&quot;]=&quot;south&quot;,[&quot;sw&quot;]=&quot;southwest&quot;,
+						 [&quot;w&quot;]=&quot;west&quot;,[&quot;nw&quot;]=&quot;northeast&quot;,[&quot;u&quot;]=&quot;up&quot;,[&quot;d&quot;]=&quot;down&quot;}
 tmap.dirtypes = {north=1, northeast=2, northwest=3, east=4, west=5,
 	south=6, southeast=7, southwest=8, up=9, down=10, [&quot;in&quot;]=11, out=12}
 tmap.carddirtypes = {north=1, northeast=2, northwest=3, east=4, west=5,
@@ -1233,13 +1258,6 @@ end</script>
 --                                             --
 -- Note that you can also use external Scripts --
 -------------------------------------------------
---[[
-colorMappings = {red={0, 255, 0, 0}, green={1, 0, 255, 0}, blue={2, 0, 0, 255},
- yellow={3, 255, 255, 0}, cyan={4, 0, 255, 255}, magenta={5, 255, 0, 255}, default={6, 255, 0,0}}
-for i,v in pairs(colorMappings) do
-	setCustomEnvColor(v[1], v[2], v[3], v[4])
-end
-]]
 tmap.colorMappings = {red=257, green=258, yellow=259, blue=260, magenta=261,
 	cyan=262, white=263, black=264, lred=265, lgreen=266, lyellow=267,
 	lblue=268, lmagenta=269, lcyan=270, lwhite=271, lblack=272}
@@ -1286,41 +1304,6 @@ customEnvColors[257] = mpHost-&gt;mRed_2;
 	deleteRoom(roomId)
 end
 
-
--------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external Scripts --
--------------------------------------------------
---[[
-colorMappings = {red={0, 255, 0, 0}, green={1, 0, 255, 0}, blue={2, 0, 0, 255},
- yellow={3, 255, 255, 0}, cyan={4, 0, 255, 255}, magenta={5, 255, 0, 255}, default={6, 255, 0,0}}
-for i,v in pairs(colorMappings) do
-	setCustomEnvColor(v[1], v[2], v[3], v[4])
-end
-]]
-colorMappings = {red=257, green=258, yellow=259, blue=260, magenta=261,
-	cyan=262, white=263, black=264, lred=265, lgreen=266, lyellow=267,
-	lblue=268, lmagenta=269, lcyan=270, lwhite=271, lblack=272}
---[[
-customEnvColors[257] = mpHost-&gt;mRed_2;
-    customEnvColors[258] = mpHost-&gt;mGreen_2;
-    customEnvColors[259] = mpHost-&gt;mYellow_2;
-    customEnvColors[260] = mpHost-&gt;mBlue_2;
-    customEnvColors[261] = mpHost-&gt;mMagenta_2;
-    customEnvColors[262] = mpHost-&gt;mCyan_2;
-    customEnvColors[263] = mpHost-&gt;mWhite_2;
-    customEnvColors[264] = mpHost-&gt;mBlack_2;
-    customEnvColors[265] = mpHost-&gt;mLightRed_2;
-    customEnvColors[266] = mpHost-&gt;mLightGreen_2;
-    customEnvColors[267] = mpHost-&gt;mLightYellow_2;
-    customEnvColors[268] = mpHost-&gt;mLightBlue_2;
-    customEnvColors[269] = mpHost-&gt;mLightMagenta_2;
-    customEnvColors[270] = mpHost-&gt;mLightCyan_2;
-    customEnvColors[271] = mpHost-&gt;mLightWhite_2;
-    customEnvColors[272] = mpHost-&gt;mLightBlack_2;
-]]
-
 -------------------------------------------------
 -- room label the room I'm in
 -- room label 342 this is a label in room 342
@@ -1340,12 +1323,12 @@ function tmap:roomLabel(input)
   end
 
   -- next: is this a foreground color?
-  if tk[1] and tmap.color_table[tk[1]] then
+  if tk[1] and color_table[tk[1]] then
     fg = table.remove(tk, 1)
   end
 
   -- next: is this a backround color?
-  if tk[1] and tmap.color_table[tk[1]] then
+  if tk[1] and color_table[tk[1]] then
     bg = table.remove(tk, 1)
   end
 
@@ -1359,13 +1342,13 @@ function tmap:roomLabel(input)
     tmap:echo(&quot;We don't know where we are to make a label here.&quot;) return
   end
 
-  local x,y = getRoomCoordinates(room)
-  local f1,f2,f3 = unpack(tmap.color_table[fg])
-  local b1,b2,b3 = unpack(tmap.color_table[bg])
+  local x,y,z = getRoomCoordinates(room)
+  local f1,f2,f3 = unpack(color_table[fg])
+  local b1,b2,b3 = unpack(color_table[bg])
 
   -- finally: do it :)
 
-  local lid = createMapLabel(getRoomArea(room), message, x, y, f1,f2,f3, b1,b2,b3)
+  local lid = createMapLabel(getRoomArea(room), message, x, y, z, f1,f2,f3, b1,b2,b3)
   tmap:echo(string.format(&quot;Created new label #%d '%s' in %s.&quot;, lid, message, getRoomAreaName(getRoomArea(room))))
 end
 </script>
