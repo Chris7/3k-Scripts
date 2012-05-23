@@ -1217,7 +1217,7 @@ tmap.fulldirtable = tmap:Set {&quot;northwest&quot;, &quot;north&quot;, &quot;no
 	&quot;south&quot;, &quot;southeast&quot;, &quot;up&quot;, &quot;down&quot;}
 tmap.shortToLong = {[&quot;n&quot;]=&quot;north&quot;, [&quot;ne&quot;]=&quot;northeast&quot;,[&quot;east&quot;]=&quot;east&quot;,
 						 [&quot;se&quot;]=&quot;southeast&quot;,[&quot;s&quot;]=&quot;south&quot;,[&quot;sw&quot;]=&quot;southwest&quot;,
-						 [&quot;w&quot;]=&quot;west&quot;,[&quot;nw&quot;]=&quot;northeast&quot;,[&quot;u&quot;]=&quot;up&quot;,[&quot;d&quot;]=&quot;down&quot;}
+						 [&quot;w&quot;]=&quot;west&quot;,[&quot;nw&quot;]=&quot;northwest&quot;,[&quot;u&quot;]=&quot;up&quot;,[&quot;d&quot;]=&quot;down&quot;}
 tmap.dirtypes = {north=1, northeast=2, northwest=3, east=4, west=5,
 	south=6, southeast=7, southwest=8, up=9, down=10, [&quot;in&quot;]=11, out=12}
 tmap.carddirtypes = {north=1, northeast=2, northwest=3, east=4, west=5,
@@ -1228,6 +1228,11 @@ tmap.dirnums = {[1]=&quot;north&quot;, [2]=&quot;northeast&quot;, [3]=&quot;nort
 tmap.specialChar = &quot;¡&quot;
 tmap.mapScale = 8
 tmap.priorMapScale = 8
+tmap.unitVectors = {[1]={0,1,0}, [2]={1,1,0}, 
+		[3]={-1,1,0}, [4]={1,0,0},
+		[5]={-1,0,0}, [6]={0,-1,0}, 
+		[7]={1,-1,0}, [8]={-1,-1,0},
+		[9]={0,0,1}, [10]={0,0,-1}}
 function tmap:calculateMapOffset()
 	local mapScale = tmap.mapScale
 	tmap.diroffset = {[1]={0,1*mapScale,0}, [2]={1*mapScale,1*mapScale,0}, 
@@ -1310,6 +1315,8 @@ end
 -- room label green this is a green label where I'm at
 -- room label green black this is a green to black label where I'm at
 -- room label 34 green black this is a green to black label at room 34
+-- directional room label:
+-- room label 34 nw 5,5,0 this is a green to black label at room 34 offset by 5,5 from the northwest
 -- how it works: split input string into tokens by space, then determine
 -- what to do by checking first few tokens, and finally call the local
 -- function with the proper arguments
@@ -1320,6 +1327,32 @@ function tmap:roomLabel(input)
   -- input always have to be something, so tk[1] at least always exists
   if tonumber(tk[1]) then
     room = tonumber(table.remove(tk, 1)) -- remove the number, so we're left with the colors or msg
+  end
+
+  -- next: is this a dir offset?
+  local dir = &quot;n&quot;
+  if tk[1] and tmap.shortToLong[tk[1]] then
+    dir = table.remove(tk, 1)
+  end
+
+  -- next: is this a dir offset sequence?
+  local dOffset = &quot;1,1,1&quot;
+  local dx,dy,dz = 1,1,0
+  if tk[1] and string.find(tk[1],&quot;%d,%d,%d&quot;) then
+    dOffset = table.remove(tk, 1)
+	 local dInfo = string.split(dOffset,',')
+	 dx = tonumber(dInfo[1])
+	 dy = tonumber(dInfo[2])
+    dz = tonumber(dInfo[3])
+  end
+  if tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][1] ~= 0 then
+  	dx = dx*tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][1]
+  end
+  if tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][2] ~= 0 then
+	  dy = dy*tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][2]
+  end
+  if tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][3] ~= 0 then
+	  dz = dz*tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][3]
   end
 
   -- next: is this a foreground color?
@@ -1348,10 +1381,52 @@ function tmap:roomLabel(input)
 
   -- finally: do it :)
 
-  local lid = createMapLabel(getRoomArea(room), message, x, y, z, f1,f2,f3, b1,b2,b3)
+  local lid = createMapLabel(getRoomArea(room), message, x+dx, y+dy, z+dz, f1,f2,f3, b1,b2,b3)
   tmap:echo(string.format(&quot;Created new label #%d '%s' in %s.&quot;, lid, message, getRoomAreaName(getRoomArea(room))))
+  local labels = getRoomUserData(room, &quot;mapLabels&quot;)
+  --labels is structured like: dir|||id|||label|||x,y,z offset|||fg|||bg!&amp;!dir2|||id|||label|||xyz...
+  local lTable = string.split(labels,'!&amp;!')
+  local oStr = &quot;&quot;
+  local dirSet = false
+  local labelRep = tostring(getRoomArea(room))..'.'..tostring(lid)
+  for i,v in pairs(lTable) do
+    local entry = string.split(v, '|||')
+	 if entry[1] == &quot;&quot; then
+    elseif entry[1] == dir then
+		oStr = oStr..dir..'|||'..labelRep..'|||'..message..'|||'..dOffset..'|||'..fg..'|||'..bg..'!&amp;!'
+      dirSet = true
+		local linfo = string.split(entry[2], '%.')
+		deleteMapLabel(tonumber(linfo[1]),tonumber(linfo[2]))
+    else
+	 	oStr = oStr..v..'!&amp;!'
+    end
+  end
+  if not dirSet then
+		oStr = oStr..dir..'|||'..labelRep..'|||'..message..'|||'..dOffset..'|||'..fg..'|||'..bg..'!&amp;!' 
+  end
+  oStr = string.sub(oStr,1,-4)
+  setRoomUserData(room, &quot;mapLabels&quot;,oStr)
 end
-</script>
+
+function tmap:rebuildRoomLabels()
+	local labels = searchRoomUserData(&quot;mapLabels&quot;,&quot;&quot;)
+   for roomid, label in pairs(labels) do
+		setRoomUserData(roomid, &quot;mapLabels&quot;, &quot;&quot;)
+		if label == &quot;&quot; then
+		else
+			local entry = string.split(label, '!&amp;!')
+			for i, info in pairs(entry) do
+				local li = string.split(info, '|||')
+				local linfo = string.split(li[2], '%.')
+				tmap:roomLabel(roomid..&quot; &quot;..li[1]..&quot; &quot;..li[4]..&quot; &quot;..li[5]..&quot; &quot;..li[6]..&quot; &quot;..li[3])
+				deleteMapLabel(tonumber(linfo[1]),tonumber(linfo[2]))
+			end
+		end
+   end
+end
+--tmap:rebuildRoomLabels()
+--display(getMapLabels(686))
+--tmap:roomLabel(&quot;43804 n 1,5,0 this is a test&quot;)</script>
                     <eventHandlerList/>
                 </Script>
                 <Script isActive="yes" isFolder="no">
