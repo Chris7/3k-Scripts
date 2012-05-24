@@ -627,14 +627,15 @@ setRoomArea( tmap.lastId, zoneId )
 local linked = {}
 for i,v in pairs(tmap:getAllExits(tmap.lastId)) do
 	tmap:roomLabel(tostring(v)..&quot; &quot;..Name)
-	local toArea = getRoomAreaName(v)
+	local toArea = getRoomAreaName(getRoomArea(v))
 	if not linked[toArea] then
 		tmap:roomLabel(tmap.lastId..&quot; &quot;..toArea)
 		linked[toArea] = true
 	end
 end
 tmap.UserArea=zoneId
-tmap:onPlayerMove(tmap.lastId)</script>
+tmap:onPlayerMove(tmap.lastId)
+centerview(tmap.lastId)</script>
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap movenewarea (.*)$</regex>
