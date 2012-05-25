@@ -327,7 +327,8 @@ end</script>
                     <name>Purge exit queue</name>
                     <script>--[[This will clear the direction queue]]
 tmap.comTable = {}
-tmap.roomsToWalk = nil</script>
+tmap.roomsToWalk = nil
+tmap.mapspecial = nil</script>
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap dirclear$</regex>
@@ -627,7 +628,7 @@ setRoomArea( tmap.lastId, zoneId )
 local linked = {}
 for i,v in pairs(tmap:getAllExits(tmap.lastId)) do
 	tmap:roomLabel(tostring(v)..&quot; &quot;..Name)
-	local toArea = getRoomAreaName(v)
+	local toArea = getRoomAreaName(getRoomArea(v))
 	if not linked[toArea] then
 		tmap:roomLabel(tmap.lastId..&quot; &quot;..toArea)
 		linked[toArea] = true
@@ -1449,9 +1450,12 @@ end
 		if (tmap.lastId) then
 			local mapw,maph = getMapSize()
 			local x,y,z
+			mapw = mapw/4
+			maph = maph/4
 			setMapLocation(roomid)
 			x,y,z = getMapCoords()
 			tmap.lastx,tmap.lasty,tmap.lastz = getRoomCoordinates(tmap.lastId)
+			tmap.lasty = tmap.lasty*-1
 			local cArea = getRoomArea(roomid)
 			if tmap.lastz ~= z or cArea ~= tmap.UserArea or y&gt;(tmap.lasty+maph) or y&lt;(tmap.lasty-maph) or x&gt;(tmap.lastx+mapw) or x&lt;(tmap.lastx-mapw) then
 				centerview(roomid)
@@ -1740,7 +1744,10 @@ end
 	setRoomUserData(roomID, &quot;description&quot;, roomdesc)
 	if roomexits then
 	 newexits = tmap:splitExits(roomexits)
-    --make exit stubs
+    --make exit stubs, first nuke the old ones
+	 for i,v in pairs(newexits) do
+		setExitStub(roomID, tmap.carddirtypes[v],0)
+	 end
     local existingExits = getRoomExits(roomID)
     for i,v in pairs(newexits) do
 		  if tmap.carddirtypes[v] then
