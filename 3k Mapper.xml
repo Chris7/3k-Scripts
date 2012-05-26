@@ -520,7 +520,12 @@ if matches[2] then
 end
 send(&quot;brief map&quot;)
 send(&quot;look&quot;)
-tmap.findme=1</script>
+tmap.findme=1
+if tmap.mapstatus then
+	tmap.mapstatus = nil
+	tmap.tMapper = nil
+	tmap:echo(&quot;\n MAPPER DISABLED&quot;)
+end</script>
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap findme\s?(\w+)?$</regex>
@@ -634,7 +639,6 @@ for i,v in pairs(tmap:getAllExits(tmap.lastId)) do
 		linked[toArea] = true
 	end
 end
-tmap.UserArea=zoneId
 tmap:onPlayerMove(tmap.lastId)</script>
                     <command></command>
                     <packageName></packageName>
@@ -935,6 +939,17 @@ setRoomUserData(tmap.lastId, &quot;exitScript&quot;..matches[2], &quot;tempTrigg
                     <packageName></packageName>
                     <regex>^tmap pauseUntil &quot;(.+)&quot; (.+)$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Create a looping exit</name>
+                    <script>local dir = tmap.getDirNum(matches[2])
+if not dir then
+	tmap:echo(&quot;&lt;red&gt;Can't find the direction &quot;..matches[2])
+end
+setExit(tmap.lastId, tmap.lastId, dir)</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^tmap loopexit (.+)$</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
@@ -1022,6 +1037,15 @@ function tmap:tlen(t)
 		len = len+1
 	end
 	return len
+end
+
+function tmap:getDirNum(input)
+	if tmap.shortToLong[input] then
+		return tmap.dirtypes[tmap.shortToLong[input]]
+	end
+	if tmap.dirtypes[input] then
+		return tmap.dirtypes[input]
+	end
 end
 
 function tmap:getAreaName(id)
@@ -1454,10 +1478,12 @@ end
 			maph = maph/4
 			setMapLocation(roomid)
 			x,y,z = getMapCoords()
+			y=y*-1
 			tmap.lastx,tmap.lasty,tmap.lastz = getRoomCoordinates(tmap.lastId)
-			tmap.lasty = tmap.lasty*-1
+			local cx,cy,cz = getRoomCoordinates(roomid)
 			local cArea = getRoomArea(roomid)
-			if tmap.lastz ~= z or cArea ~= tmap.UserArea or y&gt;(tmap.lasty+maph) or y&lt;(tmap.lasty-maph) or x&gt;(tmap.lastx+mapw) or x&lt;(tmap.lastx-mapw) then
+display(tmap.UserArea)
+			if cz ~= z or cArea ~= tmap.UserArea or cy&gt;(y+maph) or cy&lt;(y-maph) or cx&gt;(x+mapw) or cx&lt;(x-mapw) then
 				centerview(roomid)
 			else
 				updateMap()
@@ -1470,7 +1496,7 @@ end
 --		updateRoomInfo()
 	end
 end
-
+tmap.onPlayerMove(tmap.lastId)
 function tmap:onFollow(direction)
 	--direction populated when we are following, otherwise we're looking
 	--at the player's input via comTable
@@ -1614,6 +1640,7 @@ function tmap:onFindMe(name, desc, exits)
 	local withexits = searchRoom(tmap:convertRoomName(name))
 	local withoutexits = searchRoom(tmap:removeRoomExits(name))
 	local pExits = {}
+	tmap:echo(&quot;&lt;yellow&gt; Searching For Us&quot;)
 	if tmap:tlen(withoutexits)&gt;0 then
 		local can = {}
 		local tname = tmap:removeRoomExits(name)
@@ -1622,39 +1649,52 @@ function tmap:onFindMe(name, desc, exits)
 				table.insert(can,i)
 			end
 		end
-		if table.getn(can)==1 then
+		if tmap:tlen(can)==1 then
 			tmap:playerFound(can[1])
+			return
 		else
-			tmap:doFind(withoutexits, desc)
+			if tmap:doFind(withoutexits, desc,exits) then
+				return
+			end
 		end
-	elseif tmap:tlen(withexits)&gt;0 then
+	end
+	if tmap:tlen(withexits)&gt;0 then
 		local can = {}
 		local tname = tmap:convertRoomName(name)
-		for i,v in pairs(can) do
+		for i,v in pairs(withexits) do
 			if v == tname then
 				table.insert(can,i)
 			end
 		end
-		if table.getn(can)==1 then
+		if tmap:tlen(can)==1 then
 			tmap:playerFound(can[1])
+			return
 		else
-			tmap:doFind(withexits, desc)
+			if tmap:doFind(withexits, desc,exits) then
+				return
+			end
 		end
-	elseif tmap:tlen(beforeconvert)&gt;0 then
+	end
+	if tmap:tlen(beforeconvert)&gt;0 then
 		local can = {}
-		for i,v in pairs(can) do
+		for i,v in pairs(beforeconvert) do
 			if v == beforeconvert then
 				table.insert(can,i)
 			end
 		end
-		if table.getn(can)==1 then
+		if tmap:tlen(can)==1 then
 			tmap:playerFound(can[1])
+			return
 		else
-			tmap:doFind(beforeconvert,desc)
+			if tmap:doFind(beforeconvert,desc,exits) then
+				return
+			end
 		end
-	else
-		tmap:doDescFind(desc)
 	end
+	if tmap:doDescFind(desc) then
+		return
+	end
+	tmap:echo(&quot;&lt;red&gt; Could not find us, try another room or use tmap searchMode&quot;)
 end
 
 function tmap:getKeys(table)
@@ -1683,55 +1723,58 @@ function tmap:doDescFind(desc)
 			end
 		end
 		if (count == 1) then
-			tmap:echo(&quot;Found&quot;)
-			tmap:onPlayerMove(roomId)
-			tmap.findme = nil
+			tmap:playerFound(roomId)
+			return true
 		else
 	--		display(pExits)
 		end
 	end
+	return nil
 end
 
-function tmap:doFind(results, desc)
+function tmap:doFind(results, desc, exits)
 	local pExits = {}
-	if table.getn(results) == 1 then
+	if tmap:tlen(results) == 1 then
 		tmap:onPlayerMove(tonumber(results[1]))
 		tmap.comTable = {}
 		tmap.findme = nil
 	else
 		--multiple entries, do room descs
 		for i,v in pairs(results) do
-			local roomdesc = getRoomUserData(v, &quot;description&quot;)
-			roomdesc = string.gsub(roomdesc,&quot;.\n&quot;,&quot;&quot;)
-			if desc == roomdesc then
-				pExits[v] = roomdesc
+			local roomdesc = getRoomUserData(i, &quot;description&quot;)
+			if desc == roomdesc or desc == string.gsub(roomdesc,&quot;.\n&quot;,&quot;&quot;) then
+				pExits[i] = roomdesc
 			end
 		end
-		if table.getn(pExits) == 1 then
-			tmap:onPlayerMove(pExits[1])
-			tmap.comTable = {}
+		if tmap:tlen(pExits) == 1 then
+			tmap:playerFound(pExits[1])
+			return true
 		else
 			--try matching room exits now
-			tmap:echo(&quot;trying exits&quot;)
-			local lExits = tmap:splitExits(exits)
-			local pExits2 = {}
-			for i,v in pairs(pExits) do
-				if tmap:matchKeys(tmap:getAllExits(v),lExits) then
-					table.insert(pExits2,v)
+			if exits then
+				local lExits = tmap:splitExits(exits)
+				local pExits2 = {}
+				for i,v in pairs(pExits) do
+					if tmap:matchKeys(tmap:getAllExits(i),lExits) then
+						table.insert(pExits2,i)
+					end
 				end
-			end
-			if #pExits==1 then
-				tmap:onPlayersMove(pExits2[1])
-				tmap:echo(&quot;FOUND!&quot;)
-				tmap.findme = nil
-			else
-				tmap:echo(&quot;Possible Rooms:\n&quot;)
-				display(pExits)
+				if tmap:tlen(pExits)==1 then
+					tmap:playerFound(pExits2[1])
+					return true
+				else
+					if tmap:tlen(pExits) &gt; 15 then
+						tmap:echo(&quot;\n&lt;red&gt;More than 15 possible rooms found&quot;)
+					else
+						tmap:echo(&quot;Possible Rooms:\n&quot;)
+						display(pExits)
+					end
+				end
 			end
 		end
 	end
-end
-</script>
+	return nil
+end</script>
                     <eventHandlerList/>
                 </Script>
                 <Script isActive="yes" isFolder="no">
@@ -1745,8 +1788,8 @@ end
 	if roomexits then
 	 newexits = tmap:splitExits(roomexits)
     --make exit stubs, first nuke the old ones
-	 for i,v in pairs(newexits) do
-		setExitStub(roomID, tmap.carddirtypes[v],0)
+	 for i,v in pairs(getExitStubs(roomID)) do
+		setExitStub(roomID, v,0)
 	 end
     local existingExits = getRoomExits(roomID)
     for i,v in pairs(newexits) do
