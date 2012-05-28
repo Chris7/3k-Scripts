@@ -371,7 +371,7 @@ if tonumber(entry) then
 	entry = tonumber(entry)
 	gotoRoom(entry)
 	tmap:onPlayerMove(entry)
-elseif tmap.mwalkList[entry] then
+elseif tmap.mwalkList and tmap.mwalkList[entry] then
 	gotoRoom(tmap.mwalkList[entry])
 else
 	--it's a word, look for it in areas and walk to area
@@ -399,7 +399,14 @@ else
 		local rooms = getAreaRooms(pareas[1][1])
 		gotoRoom(rooms[0])
 	else
-		tmap:echo(pareas)
+		tmap:echo(&quot;\n&lt;red&gt; Multiple Matching Areas Found.  Click desired destination&quot;)
+		for i,v in pairs(pareas) do
+			local room = getAreaRooms(v[1])[0]
+			if room then
+				echoLink(v[2]..&quot; (&quot;..getRoomName(room)..&quot;)\n&quot;, [[gotoRoom(]]..tostring(room)..[[)]],&quot;&quot;)
+			end
+		end
+		tmap:echo(&quot;&quot;)
 	end
 end</script>
                     <command></command>
@@ -635,7 +642,7 @@ for i,v in pairs(tmap:getAllExits(tmap.lastId)) do
 	tmap:roomLabel(tostring(v)..&quot; &quot;..Name)
 	local toArea = getRoomAreaName(getRoomArea(v))
 	if not linked[toArea] then
-		tmap:roomLabel(tmap.lastId..&quot; &quot;..toArea)
+		tmap:roomLabel(tmap.lastId..&quot; n 0,1,0 &quot;..toArea)
 		linked[toArea] = true
 	end
 end
@@ -1482,7 +1489,6 @@ end
 			tmap.lastx,tmap.lasty,tmap.lastz = getRoomCoordinates(tmap.lastId)
 			local cx,cy,cz = getRoomCoordinates(roomid)
 			local cArea = getRoomArea(roomid)
-display(tmap.UserArea)
 			if cz ~= z or cArea ~= tmap.UserArea or cy&gt;(y+maph) or cy&lt;(y-maph) or cx&gt;(x+mapw) or cx&lt;(x-mapw) then
 				centerview(roomid)
 			else
