@@ -25,29 +25,31 @@ mapwin.labelbox = mapwin.labelbox or {}
 mapwin.labels = mapwin.labels or {}
 mapwin.labelWidth = 100
 mapwin.labelHeight = 25
-mapwin.windowlist = {&quot;Map&quot;, &quot;Room Info&quot;}
+mapwin.windowlist = {&quot;Map&quot;, &quot;Room Info&quot;, &quot;Dir Queue&quot;}
 mapwin.width = &quot;420&quot;
 mapwin.height = &quot;300&quot;
 mapwin.border = 25
 favorites = {}
 favorites.labels = {}
 
-function mapwinResetUI()
-  width, height = getMainWindowSize()
-  mapwin.container = Geyser.Container:new({
+function mapwin:ResetUI()
+  --width, height = getMainWindowSize()
+--[[  mapwin.container = Geyser.Container:new({
     fontSize = 8,
     x=width-mapwin.width-mapwin.border,
     y=height-mapwin.height-mapwin.border,
     width=mapwin.width,
     height=mapwin.height,
     name=&quot;mapwinWindow&quot;,
-  })
+  })]]
 end
 
 function mapwinSwitch(win)
 	local oldwin = mapwin.currentWindow
-	if oldwin then
-		mapwin.windows[oldwin]:hide()
+	if oldwin and mapwin.windows[oldwin] and mapwin.windows[win] then
+		if mapwin.windows[oldwin] then
+			mapwin.windows[oldwin]:hide()
+		end
 		mapwin.labels[oldwin]:setColor(50,50,50)
 		mapwin.labels[oldwin]:echo(oldwin, &quot;white&quot;, &quot;c&quot;)
 	end
@@ -59,37 +61,44 @@ end
 
 function mapwin:create()
   --reset the UI
-  mapwinResetUI()
+  mapwin:ResetUI()
+	width, height = getMainWindowSize()
+	local sx = width-mapwin.width-mapwin.border
+	local sy = height-mapwin.height-mapwin.border
   --iterate the table of channels and create some windows and tabs
   for i,tab in ipairs(mapwin.windowlist) do
     mapwin.labels[tab] = Geyser.Label:new({
       name=string.format(&quot;label%s&quot;, tab),
-		x=mapwin.labelWidth*i,
-		y=0,
+		x=sx+mapwin.labelWidth*i,
+		y=sy,
 		width=mapwin.labelWidth,
 		height=mapwin.labelHeight,
-		nestable=true
-    }, mapwin.container)
+		nestable=true,
+		flyOut=true
+    })
     mapwin.labels[tab]:echo(tab, &quot;white&quot;, &quot;c&quot;)
     mapwin.labels[tab]:setColor(50,50,50)
+	if tab ~= &quot;Dir Queue&quot; then
     mapwin.labels[tab]:setClickCallback(&quot;mapwinSwitch&quot;, tab)
+	end
     if tab == &quot;Map&quot; then
  	mapwin.windows[tab] = Geyser.Mapper:new({
-      x = 0,
-      y = mapwin.labelHeight,
-      height = &quot;100%&quot;,
-      width = &quot;100%&quot;,
+      x = sx,
+      y = sy+mapwin.labelHeight,
+      height = mapwin.height,
+      width = mapwin.width,
       name = string.format(&quot;mapwin%s&quot;, tab),
-    }, mapwin.container)
+    })--, mapwin.container)
     mapwin.windows[tab]:hide()
+	elseif tab == &quot;Dir Queue&quot; then
     else
     mapwin.windows[tab] = Geyser.MiniConsole:new({
-      x = 0,
-      y = mapwin.labelHeight,
+      x = sx,
+      y = sy+mapwin.labelHeight,
       height = &quot;100%&quot;,
       width = &quot;100%&quot;,
       name = string.format(&quot;mapwin%s&quot;, tab),
-    }, mapwin.container)
+    })--, mapwin.container)
     mapwin.windows[tab]:setFontSize(8)
     mapwin.windows[tab]:setColor(0,0,0)
     mapwin.windows[tab]:setWrap(60)
@@ -99,55 +108,43 @@ function mapwin:create()
   mapwinSwitch(&quot;Map&quot;)
 end
 
-function mapwinClearWindow(win)
+function mapwin:ClearWindow(win)
 	clearUserWindow(string.format(&quot;mapwin%s&quot;, win))
 end
 
-function mapwinAppendWindow(win, text)
+function mapwin:AppendWindow(win, text)
 	mapwin.windows[win]:cecho(text)
 end
 
-function mapwinAppendWindowClickable(win, text, command, tip)
+function mapwin:AppendWindowClickable(win, text, command, tip)
 	echoLink(mapwin.windows[win].name, text, command, tip)
 end
 
-function updateRoomInfo()
-   mapwinClearWindow(&quot;Room Info&quot;)
+function mapwin:updateRoomInfo()
+   mapwin:ClearWindow(&quot;Room Info&quot;)
    updatedesc = getRoomUserData( tmap.lastId, &quot;description&quot;)
    local exits = getAllExits(tmap.lastId)
 	local exitlist = &quot;Exits: &quot;
    updatedesc = string.gsub(updatedesc, &quot;.\n&quot;, &quot; &quot;)
-   mapwinAppendWindow(&quot;Room Info&quot;, &quot;&lt;cyan&gt;&quot;..updatedesc..&quot;\n&quot;)
+   mapwin:AppendWindow(&quot;Room Info&quot;, &quot;&lt;cyan&gt;&quot;..updatedesc..&quot;\n&quot;)
 	local exitlen = 0 --for wrapping
    if exits then
 		for v,i in pairs(exits) do
 			exitlen = exitlen+string.len(i)
 			if exitlen &gt; 30 then
-				mapwinAppendWindow(&quot;Room Info&quot;, &quot;\n&quot;)
+				mapwin:AppendWindow(&quot;Room Info&quot;, &quot;\n&quot;)
 				exitlen=0
 			end
-			mapwinAppendWindowClickable(&quot;Room Info&quot;, i..&quot;, &quot;, [[send(&quot;]]..i..[[&quot;);onFollow(&quot;]]..i..[[&quot;)]], i)
+			mapwin:AppendWindowClickable(&quot;Room Info&quot;, i..&quot;, &quot;, [[send(&quot;]]..i..[[&quot;);onFollow(&quot;]]..i..[[&quot;)]], i)
 		end
 	end
 end
 
-mapwin:create()</script>
+if not mapwin.windows[&quot;Map&quot;] then
+	mapwin:create()
+end
+--mapwin:create()</script>
                 <eventHandlerList/>
-            </Script>
-            <Script isActive="yes" isFolder="no">
-                <name>onFavorite</name>
-                <packageName></packageName>
-                <script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external Scripts --
--------------------------------------------------
-function onFavorite(...)
-	gotoRoom(tonumber(arg[7]))
-end</script>
-                <eventHandlerList>
-                    <string>onFavorite</string>
-                </eventHandlerList>
             </Script>
             <Script isActive="yes" isFolder="no">
                 <name>Create Favorites</name>
@@ -157,7 +154,7 @@ end</script>
 --                                             --
 -- Note that you can also use external Scripts --
 -------------------------------------------------
-function setupFavorites()
+function mapwin:setupFavorites()
     favTable = searchRoomUserData(&quot;favorite&quot;, &quot;&quot;)
     favSorted = {}
     unsorted = {}
@@ -204,7 +201,54 @@ function setupFavorites()
     end
 end
 
-setupFavorites()</script>
+mapwin:setupFavorites()</script>
+                <eventHandlerList/>
+            </Script>
+            <Script isActive="no" isFolder="no">
+                <name>Direction Queue</name>
+                <packageName></packageName>
+                <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+function mapwin:updateDirQueue()
+	if not mapwin.dirLabels then
+		mapwin.dirLabels = {}
+	end
+	for i,v in pairs(mapwin.dirLabels) do
+		deleteLabel(&quot;dwin&quot;..tostring(i))--mapwin.dirLabels[i]:hide()
+	end
+	if #tmap.comTable &gt; 0 then
+		mapwin.labels[&quot;Dir Queue&quot;]:echo(tmap.comTable[1],&quot;white&quot;, &quot;c&quot;)
+	end
+	if #tmap.comTable &gt; 1 then
+		for i,v in ipairs(tmap.comTable) do
+echo(&quot;fd&quot;)
+			mapwin.dirLabels[i] = mapwin.labels[&quot;Dir Queue&quot;]:addChild({name=&quot;dwin&quot;..tostring(i),
+				height=mapwin.labelHeight,
+				width=mapwin.labelWidth,
+				layoutDir=&quot;LV&quot;,
+				flyOut=true})
+			--display(mapwin.dirLabels)
+echo(&quot;fs&quot;)
+			mapwin.dirLabels[i]:echo(v,&quot;white&quot;, &quot;c&quot;)
+			mapwin.dirLabels[i]:setClickCallback(&quot;mapwinDirClear&quot;, i)
+			mapwin.dirLabels[i]:show()
+		end
+	end
+end
+--table.insert(tmap.comTable,&quot;east&quot;)
+mapwin:updateDirQueue()
+
+function mapwinDirClear(dirIndex)
+	display(dirIndex)
+	display(tmap.comTable)
+	for i=1,dirIndex do
+		table.remove(tmap.comTable,1)
+	end
+	mapwin:updateDirQueue()
+end</script>
                 <eventHandlerList/>
             </Script>
         </ScriptGroup>
