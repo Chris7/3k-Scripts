@@ -550,11 +550,15 @@ tmap.mapspecial = nil</script>
                     <script>--set the portals to your map to enable this
 local forbidden = {[137]=99, [5860]=99, [588]=99, [1081]=99, [1361]=99, [33798]=99}
 for i,v in pairs(forbidden) do
-	setRoomWeight(i,v)
+	if matches[2] then
+		setRoomWeight(i,0)
+	else
+		setRoomWeight(i,v)
+	end
 end</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>^tmap portalsoff$</regex>
+                    <regex>^tmap portalsoff\s?(.+)$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>Set Room Cost</name>
@@ -575,7 +579,9 @@ tmap:echo(tmap:getRoomScript(tmap.lastId))</script>
                 <Alias isActive="yes" isFolder="no">
                     <name>Delete Selected Rooms</name>
                     <script>for i,v in pairs(tmap.roomsToDelete) do
-	if v then
+	if v == tmap.last.id then
+		tmap:echo(&quot;&lt;red&gt; Unable to delete the room you are in.&quot;)
+	else
 		tmap:doRoomDelete(i)
 	end
 end
@@ -586,9 +592,15 @@ tmap.roomsToDelete = {}</script>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>Color Room</name>
-                    <script>tmap:echo(tmap.colorMappings[matches[2]])
-setRoomEnv(tmap.lastId, tmap.colorMappings[matches[2]])
-centerview(tmap.lastId)</script>
+                    <script>if tmap.colorMappings[matches[2]] then
+	setRoomEnv(tmap.lastId, tmap.colorMappings[matches[2]])
+	centerview(tmap.lastId)
+else
+	tmap:echo(&quot;\n&lt;red&gt;Cannot find color mapping.  Available colors:&quot;)
+	for i,v in pairs(tmap.colorMappings) do
+		tmap:echo(i)
+	end
+end</script>
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap croom (\w+)$</regex>
@@ -685,7 +697,11 @@ sendSocket(&quot;aset room_exits_suff reset+§\n&quot;)</script>
 for i,v in pairs(getAreaTable()) do
 	if i==matches[2] then
 		for j,k in pairs(getAreaRooms(v)) do
-			deleteRoom(k)
+			if (k == tmap.lastid) then
+				tmap:echo(&quot;&lt;red&gt;Unable to delete room if you are currently in it.&quot;)
+			else
+				deleteRoom(k)
+			end
 		end
 	end
 end</script>
@@ -708,7 +724,7 @@ zoneId = zoneId+1
 setAreaName(zoneId, Name)
 tmap.UserArea=zoneId
 tmap.lastId=nil
-tmap:echo(&quot;To create a new room, type 'firstroom' and move&quot;)</script>
+tmap:echo(&quot;To create a new room, type 'tmap firstroom' and move&quot;)</script>
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap newarea\s(.*)$</regex>
