@@ -697,7 +697,7 @@ sendSocket(&quot;aset room_exits_suff reset+§\n&quot;)</script>
 for i,v in pairs(getAreaTable()) do
 	if i==matches[2] then
 		for j,k in pairs(getAreaRooms(v)) do
-			if (k == tmap.lastid) then
+			if (k == tmap.lastId) then
 				tmap:echo(&quot;&lt;red&gt;Unable to delete room if you are currently in it.&quot;)
 			else
 				deleteRoom(k)
@@ -930,7 +930,8 @@ tmap:echo(&quot;mode.  For special exits such as up/down.  You can &quot;)
 tmap:echo(&quot;use the syntax: &lt;red&gt;&gt;special exit&gt;direction&lt;reset&gt;, for instance &quot;)
 tmap:echo(&quot;&lt;red&gt;&gt;in&gt;east&lt;reset&gt; will create a special exit to a room and place &quot;)
 tmap:echo(&quot;that room east of your current position.  &lt;red&gt;&gt;out&gt;west&lt;reset&gt; &quot;)
-tmap:echo(&quot;will complete the link.&quot;)
+tmap:echo(&quot;will complete the link.  To move the room you are currently in to &quot;)
+tmap:echo(&quot;a new area, use &lt;red&gt;tmap movenewarea areaname&lt;reset&gt;.&quot;)
 tmap:echo(&quot;&quot;)
 tmap:echo(&quot;There are a ton of aliases you can use, which you can find in the &quot;)
 tmap:echo(&quot;3K Mapper folder.  Some useful ones you might need(all these are &quot;)
@@ -972,6 +973,174 @@ setExit(tmap.lastId, tmap.lastId, dir)</script>
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap loopexit (.+)$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Move a label</name>
+                    <script>if not matches[2] then
+	tmap:echo(&quot;Syntax: tmap movelabel &lt;labelnum&gt; &lt;direction&gt; &lt;magnitude&gt;&quot;)
+	tmap:echo(&quot;If there is only one label in a room, labelnum is optional.&quot;)
+	tmap:echo(&quot;Magnitude defaults to '1'.&quot;)
+	tmap:showRoomLabels()
+	return
+end
+local input = matches[2]
+local labelnum, labeldir, labeldist
+if string.find(input, &quot;%d %a+ %d&quot;) then
+	local t = string.split(input, &quot; &quot;)
+	labelnum = tonumber(t[1])
+	labeldir = t[2]	
+	labeldist = tonumber(t[3])
+elseif string.find(input, &quot;%d %a+&quot;) then
+	local t = string.split(input, &quot; &quot;)
+	labelnum = tonumber(t[1])
+	labeldir = t[2]
+elseif string.find(input, &quot;%a+ %d&quot;) then
+	local t = string.split(input, &quot; &quot;)
+	labeldir = t[1]	
+	labeldist = tonumber(t[2])
+elseif string.find(input, &quot;%a+&quot;) then
+	labeldir = input
+else
+	tmap:echo(&quot;Syntax: tmap movelabel &lt;labelnum&gt; &lt;direction&gt; &lt;magnitude&gt;&quot;)
+	tmap:echo(&quot;If there is only one label in a room, labelnum is optional.&quot;)
+	tmap:echo(&quot;Magnitude defaults to '1'.&quot;)
+	return
+end
+if not labeldist then
+	labeldist = 1
+end
+local lTable = tmap:getRoomLabels(tmap.lastId)
+if #lTable &gt; 1 and not labelnum then
+	tmap:echo(&quot;&lt;red&gt;Multiple labels found: what one do you wish to move?&lt;reset&gt;&quot;)
+	for i,v in pairs(lTable) do
+		if v ~= &quot;&quot; then
+   			local entry = string.split(v, '|||')
+			tmap:echo(i..&quot; - &quot;..entry[3]..&quot;(&quot;..tmap.shortToLong[entry[1]]..&quot;)&quot;)
+		end
+   	end
+	return
+end
+local mdist = tmap:deepcopy(tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[labeldir]]])
+if not mdist then
+	tmap:echo(&quot;Invalid direction: &quot;..labeldir)
+	return
+end
+mdist[1] = mdist[1]*labeldist
+mdist[2] = mdist[2]*labeldist
+mdist[3] = mdist[3]*labeldist
+display(mdist)
+if #lTable == 1 and lTable[1] ~= &quot;&quot; then
+	tmap:moveRoomLabel(tmap.lastId,1,labeldir,table.concat(mdist,','))
+elseif #lTable &gt; 1 and labelnum then
+	if lTable[labelnum] then
+		tmap:moveRoomLabel(tmap.lastId,labelnum,labeldir,table.concat(mdist,','))
+	else
+		tmap:echo(&quot;Label not found.&quot;);
+	end
+end</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>tmap movelabel\s?(.+)?</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Rename a label</name>
+                    <script>if not matches[2] then
+	tmap:echo(&quot;Syntax: tmap renamelabel labelnum newname&quot;)
+	tmap:echo(&quot;If there is only one label in a room, labelnum is optional.&quot;)
+	tmap:showRoomLabels()
+	return
+end
+local input = matches[2]
+local labelnum, labelname
+if string.find(input, &quot;%d %a+&quot;) then
+	local t = string.split(input, &quot; &quot;)
+	labelnum = t[1]
+	labelname = t[2]
+elseif string.find(input, &quot;%a+&quot;) then
+	labelname = input
+else
+	tmap:echo(&quot;Syntax: tmap renamelabel labelnum newname&quot;)
+	tmap:echo(&quot;If there is only one label in a room, labelnum is optional.&quot;)
+	return
+end
+local lTable = tmap:getRoomLabels(tmap.lastId)
+if #lTable &gt; 1 and not labelnum then
+	tmap:showRoomLabels()
+	return
+end
+if #lTable == 1 and lTable[1] ~= &quot;&quot; then
+	tmap:renameRoomLabel(tmap.lastId,1, labelname)
+elseif #lTabel &gt;1 and labelnum then
+	if lTable[labelnum] then
+		tmap:renameRoomLabel(tmap.lastId,labelnum, labelname)
+	else
+		tmap:echo(&quot;Label not found.&quot;);
+	end
+end</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>tmap renamelabel\s?(.+)?$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Delete a label</name>
+                    <script>local labelnum
+local input = matches[2]
+if input and string.find(input, &quot;%d&quot;) then
+	local t = string.split(input, &quot; &quot;)
+	labelnum = t[1]
+elseif input then
+	tmap:echo(&quot;Syntax: tmap deletelabel labelnum&quot;)
+	tmap:echo(&quot;If there is only one label in a room, labelnum is optional.&quot;)
+	tmap:showRoomLabels()
+	return
+end
+local lTable = tmap:getRoomLabels(tmap.lastId)
+if #lTable &gt; 1 and not labelnum then
+	tmap:echo(&quot;&lt;red&gt;Multiple labels found: what one do you wish to delete?&lt;reset&gt;&quot;)
+	for i,v in pairs(lTable) do
+   		local entry = string.split(v, '|||')
+		tmap:echo(i..&quot; - &quot;..entry[3]..&quot;(&quot;..tmap.shortToLong[entry[1]]..&quot;)&quot;)
+   	end
+	return
+end
+if #lTable == 1 and lTable[1] ~= &quot;&quot; then
+	tmap:deleteRoomLabel(tmap.lastId,1)
+elseif #lTabel &gt; 1 and labelnum then
+	if lTable[labelnum] then
+		tmap:deleteRoomLabel(tmap.lastId,labelnum)
+	else
+		tmap:echo(&quot;Label not found.&quot;);
+	end
+end</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>tmap deletelabel\s?(.+)?$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Make a label</name>
+                    <script>if not matches[2] then
+	tmap:echo(&quot;Syntax: tmap addlabel direction message&quot;)
+	return
+end
+local input = matches[2]
+local labelnum, labeldir
+if string.find(input, &quot;%a+ %a+&quot;) then
+	local t = string.split(input, &quot; &quot;)
+	labeldir = table.remove(t,1)
+	labelname = table.concat(t, &quot; &quot;)
+else
+	tmap:echo(&quot;Syntax: tmap addlabel direction message&quot;)
+	return
+end
+labeldist = 1
+if not tmap.shortToLong[labeldir] then
+	tmap:echo(&quot;Invalid direction: &quot;..labeldir)
+	return
+end
+tmap:addRoomLabel(tmap.lastId,labeldir,labelname,labeldist)</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>tmap addlabel\s(.+)</regex>
                 </Alias>
             </AliasGroup>
         </AliasGroup>
@@ -1050,7 +1219,38 @@ end
                 <Script isActive="yes" isFolder="no">
                     <name>Helper Functions</name>
                     <packageName></packageName>
-                    <script>function tmap:mapon()
+                    <script>function tmap:deepcopy(object)
+    local lookup_table = {}
+    local function _copy(object)
+        if type(object) ~= &quot;table&quot; then
+            return object
+        elseif lookup_table[object] then
+            return lookup_table[object]
+        end
+        local new_table = {}
+        lookup_table[object] = new_table
+        for index, value in pairs(object) do
+            new_table[_copy(index)] = _copy(value)
+        end
+        return setmetatable(new_table, getmetatable(object))
+    end
+    return _copy(object)
+end
+
+function tmap:showRoomLabels()
+	local lTable = tmap:getRoomLabels(tmap.lastId)
+	if not lTable then
+		return
+	end
+	tmap:echo(&quot;&lt;red&gt;Multiple labels found:&lt;reset&gt;&quot;)
+	for i,v in pairs(lTable) do
+   		local entry = string.split(v, '|||')
+		tmap:echo(i..&quot; - &quot;..entry[3]..&quot;(&quot;..tmap.shortToLong[entry[1]]..&quot;)&quot;)
+   	end
+	return
+end
+
+function tmap:mapon()
 	return tmap.mapstatus
 end
 
@@ -1263,7 +1463,7 @@ tmap.comTable = {}
 tmap.dirtable = tmap:Set {&quot;nw&quot;,&quot;n&quot;,&quot;ne&quot;,&quot;w&quot;,&quot;e&quot;,&quot;sw&quot;,&quot;s&quot;,&quot;se&quot;,&quot;u&quot;,&quot;d&quot;}
 tmap.fulldirtable = tmap:Set {&quot;northwest&quot;, &quot;north&quot;, &quot;northeast&quot;, &quot;west&quot;, &quot;east&quot;, &quot;southwest&quot;,
 	&quot;south&quot;, &quot;southeast&quot;, &quot;up&quot;, &quot;down&quot;}
-tmap.shortToLong = {[&quot;n&quot;]=&quot;north&quot;, [&quot;ne&quot;]=&quot;northeast&quot;,[&quot;east&quot;]=&quot;east&quot;,
+tmap.shortToLong = {[&quot;n&quot;]=&quot;north&quot;, [&quot;ne&quot;]=&quot;northeast&quot;,[&quot;e&quot;]=&quot;east&quot;,
 						 [&quot;se&quot;]=&quot;southeast&quot;,[&quot;s&quot;]=&quot;south&quot;,[&quot;sw&quot;]=&quot;southwest&quot;,
 						 [&quot;w&quot;]=&quot;west&quot;,[&quot;nw&quot;]=&quot;northwest&quot;,[&quot;u&quot;]=&quot;up&quot;,[&quot;d&quot;]=&quot;down&quot;}
 tmap.dirtypes = {north=1, northeast=2, northwest=3, east=4, west=5,
@@ -1337,7 +1537,8 @@ customEnvColors[257] = mpHost-&gt;mRed_2;
                 <Script isActive="yes" isFolder="no">
                     <name>Map Modifications</name>
                     <packageName></packageName>
-                    <script>function tmap:doRoomDelete(roomId)
+                    <script>require(&quot;math&quot;)
+function tmap:doRoomDelete(roomId)
 	tmap:echo(roomId)
 	--disconnect exits
 	local specialExits = getSpecialExits(roomId)
@@ -1357,6 +1558,73 @@ customEnvColors[257] = mpHost-&gt;mRed_2;
 	deleteRoom(roomId)
 end
 
+function tmap:addRoomLabel(room,labeldir,labelname,labeldist)
+	local lTable = tmap:getRoomLabels(room)
+   if not lTable then
+		lTable = {}
+	end
+	tmap:roomLabel(labeldir..&quot; &quot;..labelname)
+end
+
+function tmap:moveRoomLabel(room,id, dir, amt)
+	local lTable = tmap:getRoomLabels(room)
+	if not lTable[id] then
+		return
+	end
+	local entry = string.split(lTable[id], '|||')
+	entry[1] = dir
+	entry[4] = amt
+	local ns = table.concat(entry,'|||')
+	lTable[id] = ns
+	tmap:saveMapLabelTable(room,lTable)
+	tmap:rebuildRoomLabels(room)
+end
+
+function tmap:renameRoomLabel(room,id, newname)
+	local lTable = tmap:getRoomLabels(room)
+	if not lTable[id] then
+		return
+	end
+	local entry = string.split(lTable[id], '|||')
+	entry[3]=newname
+	local ns = table.concat(entry,&quot;|||&quot;)
+	lTable[id] = ns
+	tmap:saveMapLabelTable(room,lTable)
+	tmap:rebuildRoomLabels(room)
+end
+
+function tmap:getRoomLabels(room)
+  local labels = getRoomUserData(room, &quot;mapLabels&quot;)
+  --labels is structured like: dir|||id|||label|||x,y,z offset|||fg|||bg!&amp;!dir2|||id|||label|||xyz...
+  local lTable = string.split(labels,'!&amp;!')
+  if lTable[1] == &quot;&quot; then
+		return nil
+  end
+  return lTable
+end
+
+function tmap:saveMapLabelTable(room, lTable)
+	local ns = table.concat(lTable, '!&amp;!')
+	if not ns or ns == &quot;&quot; then
+		clearRoomUserData(room, &quot;mapLabels&quot;)
+	else
+	   setRoomUserData(room, &quot;mapLabels&quot;, ns)
+	end
+end
+
+function tmap:deleteRoomLabel(room,id)
+	local lTable = tmap:getRoomLabels(room)
+	if #lTable &lt; id then
+		return
+	end
+   local entry = string.split(lTable[id], '|||')
+	local linfo = string.split(entry[2], '%.')
+	deleteMapLabel(tonumber(linfo[1]),tonumber(linfo[2]))
+	lTable[id] = nil
+	tmap:saveMapLabelTable(room, lTable)
+	tmap:rebuildRoomLabels(room)
+end
+
 -------------------------------------------------
 -- room label the room I'm in
 -- room label 342 this is a label in room 342
@@ -1364,12 +1632,13 @@ end
 -- room label green black this is a green to black label where I'm at
 -- room label 34 green black this is a green to black label at room 34
 -- directional room label:
--- room label 34 nw 5,5,0 this is a green to black label at room 34 offset by 5,5 from the northwest
+-- room label 34 nw 5,5,0 green black this is a green to black label at room 34 offset by 5,5 from the northwest
 -- how it works: split input string into tokens by space, then determine
 -- what to do by checking first few tokens, and finally call the local
 -- function with the proper arguments
 function tmap:roomLabel(input)
   local tk = input:split(&quot; &quot;)
+display(input)
   local room, fg, bg, message = tmap.lastId, &quot;yellow&quot;, &quot;red&quot;, &quot;Some room label&quot;
 
   -- input always have to be something, so tk[1] at least always exists
@@ -1385,24 +1654,28 @@ function tmap:roomLabel(input)
 
   -- next: is this a dir offset sequence?
   local dOffset = &quot;1,1,1&quot;
-  local dx,dy,dz = 1,1,0
-  if tk[1] and string.find(tk[1],&quot;%d,%d,%d&quot;) then
+  local vectors = tmap:deepcopy(tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]])
+  local dx,dy,dz
+  if tk[1] and string.find(tk[1],&quot;%-?%d,%-?%d,%-?%d&quot;) then
     dOffset = table.remove(tk, 1)
 	 local dInfo = string.split(dOffset,',')
-	 dx = tonumber(dInfo[1])
-	 dy = tonumber(dInfo[2])
-    dz = tonumber(dInfo[3])
+	 dx = math.abs(tonumber(dInfo[1]))
+	 dy = math.abs(tonumber(dInfo[2]))
+    dz = math.abs(tonumber(dInfo[3]))
+	if vectors[1] ~= 0 then
+  		dx = dx*vectors[1]
+    end
+   if vectors[2] ~= 0 then
+	   dy = dy*vectors[2]
   end
-  if tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][1] ~= 0 then
-  	dx = dx*tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][1]
+  if vectors[3] ~= 0 then
+	  dz = dz*vectors[3]
   end
-  if tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][2] ~= 0 then
-	  dy = dy*tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][2]
-  end
-  if tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][3] ~= 0 then
-	  dz = dz*tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[dir]]][3]
-  end
-
+	else
+		dx = vectors[1]
+		dy = vectors[2]
+		dz = vectors[3]
+	end
   -- next: is this a foreground color?
   if tk[1] and color_table[tk[1]] then
     fg = table.remove(tk, 1)
@@ -1432,11 +1705,15 @@ function tmap:roomLabel(input)
   local lid = createMapLabel(getRoomArea(room), message, x+dx, y+dy, z+dz, f1,f2,f3, b1,b2,b3)
   tmap:echo(string.format(&quot;Created new label #%d '%s' in %s.&quot;, lid, message, getRoomAreaName(getRoomArea(room))))
   local labels = getRoomUserData(room, &quot;mapLabels&quot;)
-  --labels is structured like: dir|||id|||label|||x,y,z offset|||fg|||bg!&amp;!dir2|||id|||label|||xyz...
-  local lTable = string.split(labels,'!&amp;!')
-  local oStr = &quot;&quot;
-  local dirSet = false
   local labelRep = tostring(getRoomArea(room))..'.'..tostring(lid)
+  --labels is structured like: dir|||id|||label|||x,y,z offset|||fg|||bg!&amp;!dir2|||id|||label|||xyz...
+--  local lTable = string.split(labels,'!&amp;!')
+  if labels ~= &quot;&quot; then
+	  labels = labels..'!&amp;!'..dir..'|||'..labelRep..'|||'..message..'|||'..dOffset..'|||'..fg..'|||'..bg
+	else
+		labels = dir..'|||'..labelRep..'|||'..message..'|||'..dOffset..'|||'..fg..'|||'..bg
+	end
+--[[  local dirSet = false
   for i,v in pairs(lTable) do
     local entry = string.split(v, '|||')
 	 if entry[1] == &quot;&quot; then
@@ -1453,13 +1730,26 @@ function tmap:roomLabel(input)
 		oStr = oStr..dir..'|||'..labelRep..'|||'..message..'|||'..dOffset..'|||'..fg..'|||'..bg..'!&amp;!' 
   end
   oStr = string.sub(oStr,1,-4)
-  setRoomUserData(room, &quot;mapLabels&quot;,oStr)
+]]
+  setRoomUserData(room, &quot;mapLabels&quot;,labels)
 end
 
-function tmap:rebuildRoomLabels()
+function tmap:rebuildRoomLabels(room)
+   local labels = getRoomUserData(room,&quot;mapLabels&quot;,&quot;&quot;)
+	clearRoomUserData(room, &quot;mapLabels&quot;)
+	local entry = string.split(labels, '!&amp;!')
+	for i, info in pairs(entry) do
+		local li = string.split(info, '|||')
+		local linfo = string.split(li[2], '%.')
+		tmap:roomLabel(room..&quot; &quot;..li[1]..&quot; &quot;..li[4]..&quot; &quot;..li[5]..&quot; &quot;..li[6]..&quot; &quot;..li[3])
+		deleteMapLabel(tonumber(linfo[1]),tonumber(linfo[2]))
+	end
+end
+
+function tmap:rebuildLabels()
 	local labels = searchRoomUserData(&quot;mapLabels&quot;,&quot;&quot;)
    for roomid, label in pairs(labels) do
-		setRoomUserData(roomid, &quot;mapLabels&quot;, &quot;&quot;)
+		clearRoomUserData(roomid, &quot;mapLabels&quot;)
 		if label == &quot;&quot; then
 		else
 			local entry = string.split(label, '!&amp;!')
@@ -1472,8 +1762,8 @@ function tmap:rebuildRoomLabels()
 		end
    end
 end
---tmap:rebuildRoomLabels()
---display(getMapLabels(686))
+--tmap:rebuildLabels()
+--display(getMapLabels(15))
 --tmap:roomLabel(&quot;43804 n 1,5,0 this is a test&quot;)</script>
                     <eventHandlerList/>
                 </Script>
