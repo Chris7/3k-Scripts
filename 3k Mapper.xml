@@ -980,7 +980,7 @@ setExit(tmap.lastId, tmap.lastId, dir)</script>
 	tmap:echo(&quot;Syntax: tmap movelabel &lt;labelnum&gt; &lt;direction&gt; &lt;magnitude&gt;&quot;)
 	tmap:echo(&quot;If there is only one label in a room, labelnum is optional.&quot;)
 	tmap:echo(&quot;Magnitude defaults to '1'.&quot;)
-	tmap:showRoomLabels()
+	tmap:showRoomLabels(0)
 	return
 end
 local input = matches[2]
@@ -1011,13 +1011,7 @@ if not labeldist then
 end
 local lTable = tmap:getRoomLabels(tmap.lastId)
 if #lTable &gt; 1 and not labelnum then
-	tmap:echo(&quot;&lt;red&gt;Multiple labels found: what one do you wish to move?&lt;reset&gt;&quot;)
-	for i,v in pairs(lTable) do
-		if v ~= &quot;&quot; then
-   			local entry = string.split(v, '|||')
-			tmap:echo(i..&quot; - &quot;..entry[3]..&quot;(&quot;..tmap.shortToLong[entry[1]]..&quot;)&quot;)
-		end
-   	end
+	tmap:showRoomLabels(1)
 	return
 end
 local mdist = tmap:deepcopy(tmap.unitVectors[tmap.dirtypes[tmap.shortToLong[labeldir]]])
@@ -1028,7 +1022,6 @@ end
 mdist[1] = mdist[1]*labeldist
 mdist[2] = mdist[2]*labeldist
 mdist[3] = mdist[3]*labeldist
-display(mdist)
 if #lTable == 1 and lTable[1] ~= &quot;&quot; then
 	tmap:moveRoomLabel(tmap.lastId,1,labeldir,table.concat(mdist,','))
 elseif #lTable &gt; 1 and labelnum then
@@ -1040,14 +1033,14 @@ elseif #lTable &gt; 1 and labelnum then
 end</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>tmap movelabel\s?(.+)?</regex>
+                    <regex>^tmap movelabel\s?(.+)?$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>Rename a label</name>
                     <script>if not matches[2] then
 	tmap:echo(&quot;Syntax: tmap renamelabel labelnum newname&quot;)
 	tmap:echo(&quot;If there is only one label in a room, labelnum is optional.&quot;)
-	tmap:showRoomLabels()
+	tmap:showRoomLabels(0)
 	return
 end
 local input = matches[2]
@@ -1065,7 +1058,7 @@ else
 end
 local lTable = tmap:getRoomLabels(tmap.lastId)
 if #lTable &gt; 1 and not labelnum then
-	tmap:showRoomLabels()
+	tmap:showRoomLabels(1)
 	return
 end
 if #lTable == 1 and lTable[1] ~= &quot;&quot; then
@@ -1079,7 +1072,7 @@ elseif #lTabel &gt;1 and labelnum then
 end</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>tmap renamelabel\s?(.+)?$</regex>
+                    <regex>^tmap renamelabel\s?(.+)?$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>Delete a label</name>
@@ -1091,16 +1084,12 @@ if input and string.find(input, &quot;%d&quot;) then
 elseif input then
 	tmap:echo(&quot;Syntax: tmap deletelabel labelnum&quot;)
 	tmap:echo(&quot;If there is only one label in a room, labelnum is optional.&quot;)
-	tmap:showRoomLabels()
+	tmap:showRoomLabels(0)
 	return
 end
 local lTable = tmap:getRoomLabels(tmap.lastId)
 if #lTable &gt; 1 and not labelnum then
-	tmap:echo(&quot;&lt;red&gt;Multiple labels found: what one do you wish to delete?&lt;reset&gt;&quot;)
-	for i,v in pairs(lTable) do
-   		local entry = string.split(v, '|||')
-		tmap:echo(i..&quot; - &quot;..entry[3]..&quot;(&quot;..tmap.shortToLong[entry[1]]..&quot;)&quot;)
-   	end
+	tmap:showRoomLabels(1)
 	return
 end
 if #lTable == 1 and lTable[1] ~= &quot;&quot; then
@@ -1114,7 +1103,7 @@ elseif #lTabel &gt; 1 and labelnum then
 end</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>tmap deletelabel\s?(.+)?$</regex>
+                    <regex>^tmap deletelabel\s?(.+)?$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>Make a label</name>
@@ -1140,7 +1129,7 @@ end
 tmap:addRoomLabel(tmap.lastId,labeldir,labelname,labeldist)</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>tmap addlabel\s(.+)</regex>
+                    <regex>^tmap addlabel\s(.+)$</regex>
                 </Alias>
             </AliasGroup>
         </AliasGroup>
@@ -1237,12 +1226,16 @@ end
     return _copy(object)
 end
 
-function tmap:showRoomLabels()
+function tmap:showRoomLabels(mode)
 	local lTable = tmap:getRoomLabels(tmap.lastId)
 	if not lTable then
 		return
 	end
-	tmap:echo(&quot;&lt;red&gt;Multiple labels found:&lt;reset&gt;&quot;)
+	if mode == 1 then
+		tmap:echo(&quot;&lt;red&gt;Multiple labels found:&lt;reset&gt;&quot;)
+	else
+		tmap:echo(&quot;&lt;red&gt;Labels found in room:&lt;reset&gt;&quot;)
+	end
 	for i,v in pairs(lTable) do
    		local entry = string.split(v, '|||')
 		tmap:echo(i..&quot; - &quot;..entry[3]..&quot;(&quot;..tmap.shortToLong[entry[1]]..&quot;)&quot;)
@@ -1638,7 +1631,6 @@ end
 -- function with the proper arguments
 function tmap:roomLabel(input)
   local tk = input:split(&quot; &quot;)
-display(input)
   local room, fg, bg, message = tmap.lastId, &quot;yellow&quot;, &quot;red&quot;, &quot;Some room label&quot;
 
   -- input always have to be something, so tk[1] at least always exists
