@@ -1131,6 +1131,29 @@ tmap:addRoomLabel(tmap.lastId,labeldir,labelname,labeldist)</script>
                     <packageName></packageName>
                     <regex>^tmap addlabel\s(.+)$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Exit Alias</name>
+                    <script>local exit = matches[2]
+local alias = matches[3]
+local exits = tmap:getAllExits(tmap.lastId)
+local dtype = tmap.dirtypes[alias]
+if not dtype then
+	dtype = tmap.dirtable[alias]
+end
+for i,v in pairs(exits) do
+	if (i == exit) then
+		if not dtype then
+		--special exit
+			addSpecialExit(tmap.lastId,v,alias)
+		else	
+			setExit(tmap.lastId, v, dtype)
+		end
+	end
+end</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^tmap addalias &quot;(.+)&quot; (.+)$</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
@@ -1208,7 +1231,114 @@ end
                 <Script isActive="yes" isFolder="no">
                     <name>Helper Functions</name>
                     <packageName></packageName>
-                    <script>function tmap:deepcopy(object)
+                    <script>if not tmap then
+	tmap = {}
+end
+tmap.prompter = {}
+function tmap.prompter:decisionBox(title, message,yesChoice, noChoice)
+	local w, h
+	w,h = getMainWindowSize()
+	tmap.prompter.dec = {}
+	tmap.prompter.w=300
+	tmap.prompter.h=100
+	tmap.prompter.cw=25
+	tmap.prompter.ch=40
+	tmap.prompter.dec[&quot;yes&quot;] = Geyser.Label:new({
+		name=&quot;promptYesBox&quot;,
+		message=&quot;&lt;center&gt;&quot;..yesChoice..&quot;&lt;/center&gt;&quot;,
+		x=w/2-tmap.prompter.w/2,
+		y=h/2+tmap.prompter.h/2,
+		width=tmap.prompter.w/2,
+		height=tmap.prompter.ch,
+		callback=&quot;onDecYes&quot;
+	})
+	tmap.prompter.dec[&quot;no&quot;] = Geyser.Label:new({
+		name=&quot;promptNoBox&quot;,
+		message=&quot;&lt;center&gt;&quot;..noChoice..&quot;&lt;/center&gt;&quot;,
+		x=w/2,
+		y=h/2+tmap.prompter.h/2,
+		width=tmap.prompter.w/2,
+		height=tmap.prompter.ch,
+		callback=&quot;onDecNo&quot;
+	})
+	setLabelStyleSheet(&quot;promptYesBox&quot;, [[
+		background-color: green;
+		color: black;
+		]])
+	setLabelStyleSheet(&quot;promptNoBox&quot;, [[
+		background-color: red;
+		color: black;
+		]])
+	tmap.prompter.dec[&quot;frame&quot;] = Geyser.Label:new({
+      name=&quot;promptDecision&quot;,
+		message=message,
+		x=w/2-tmap.prompter.w/2,
+		y=h/2-tmap.prompter.h/2,
+		width=tmap.prompter.w,
+		height=tmap.prompter.h,
+    })
+	setLabelStyleSheet(&quot;promptDecision&quot;, [[
+		background-color: grey;
+		]])
+end
+function tmap.prompter:Dest()
+	hideWindow(&quot;promptNoBox&quot;)
+	hideWindow(&quot;promptYesBox&quot;)
+	hideWindow(&quot;promptDecision&quot;)
+end
+
+function onDecYes(args)
+	display('move the rooms')
+	--look for rooms 1 unit in each direction
+	local loc = tmap.prompter.newLoc
+	local scale = tmap.mapScale
+	local scale2 = tmap.mapScale/2
+	local uvs = tmap.unitVectors
+	--first we see if the room can be moved by 1/2 towards a room it connects to (on the same level)
+	for dir,room in pairs(tmap:getAllExits(tmap.prompter.cid)) do
+		local vecs = uvs[tmap.dirtypes[dir]]
+		if vecs[3] == 0 and next(getRoomsByPosition(tmap.UserArea, loc[1]+vecs[1]*scale2, loc[2]+vecs[2]*scale2, loc[3])) == nil then
+			display(&quot;Moving old room to:&quot;)
+			tmap.lastId = tmap.prompter.lastId
+			echo(loc[1]+vecs[1]*scale2..&quot;,&quot;..loc[2]+vecs[2]*scale2..&quot;,&quot;..loc[3]..&quot;\n&quot;)
+			setRoomCoordinates(tmap.prompter.cid, loc[1]+vecs[1]*scale,loc[2]+vecs[2]*scale,loc[3])
+			local rtg = tmap:makeNewRoom( tmap.prompter.roomname, tmap.prompter.roomdesc, tmap.prompter.roomexits, tmap.prompter.checkedcommand)
+			tmap.prompter:Dest()
+			tmap:onPlayerMove(rtg)
+			return
+		end
+	end
+	for i,v in pairs(tmap.unitVectors) do
+		if v[3] == 0 and next(getRoomsByPosition(tmap.UserArea, loc[1]+v[1]*scale, loc[2]+v[2]*scale, loc[3])) == nil then		
+			display(&quot;Moving old room to:&quot;)
+			tmap.lastId = tmap.prompter.lastId
+			echo(loc[1]+v[1]*scale..&quot;,&quot;..loc[2]+v[2]*scale..&quot;,&quot;..loc[3]..&quot;\n&quot;)
+			setRoomCoordinates(tmap.prompter.cid, loc[1]+v[1]*scale,loc[2]+v[2]*scale,loc[3])
+			local rtg = tmap:makeNewRoom( tmap.prompter.roomname, tmap.prompter.roomdesc, tmap.prompter.roomexits, tmap.prompter.checkedcommand)
+			tmap.prompter:Dest()
+			tmap:onPlayerMove(rtg)
+			return
+		end
+		if v[3] == 0 and next(getRoomsByPosition(tmap.UserArea, loc[1]+v[1]*scale2, loc[2]+v[2]*scale2, loc[3])) == nil then		
+			display(&quot;Moving old room to:&quot;)
+			tmap.lastId = tmap.prompter.lastId
+			echo(loc[1]+v[1]*scale2..&quot;,&quot;..loc[2]+v[2]*scale2..&quot;,&quot;..loc[3]..&quot;\n&quot;)
+			setRoomCoordinates(tmap.prompter.cid, loc[1]+v[1]*scale2,loc[2]+v[2]*scale2,loc[3])
+			local rtg = tmap:makeNewRoom( tmap.prompter.roomname, tmap.prompter.roomdesc, tmap.prompter.roomexits, tmap.prompter.checkedcommand)
+			tmap.prompter:Dest()
+			tmap:onPlayerMove(rtg)
+			return
+		end
+	end
+	tmap.prompter:Dest()	
+end
+
+function onDecNo(args)
+	display('Room creation canceled')
+	tmap.prompter:Dest()
+end
+
+function tmap:deepcopy(object)
     local lookup_table = {}
     local function _copy(object)
         if type(object) ~= &quot;table&quot; then
@@ -1349,11 +1479,15 @@ end
 
 function tmap:concatTables(table1, table2)
 	local output = {}
-	for i,v in pairs(table1) do
-		output[i] = v
+	if table1 then
+		for i,v in pairs(table1) do
+			output[i] = v
+		end	
 	end
-	for i,v in pairs(table2) do
-		output[i] = v
+	if table2 then
+		for i,v in pairs(table2) do
+			output[i] = v
+		end
 	end
 	return output
 end
@@ -1361,8 +1495,11 @@ end
 function tmap:getAllExits(roomId)
    local exits = getRoomExits(roomId)
 	local sexits = {}
-   for i,v in pairs(getSpecialExits(roomId)) do
-		sexits[i]=v
+	local specials = getSpecialExits(roomId)
+	if specials then
+	   for i,v in pairs(getSpecialExits(roomId)) do
+			sexits[i]=v
+		end
 	end
 	sexits = tmap:swapKeysValues(sexits)
    return tmap:concatTables(exits,sexits)
@@ -2120,6 +2257,7 @@ end</script>
 	display(&quot;new name: &quot;..roomname)
 	display(&quot;new description: &quot;..roomdesc)
 end
+
 function tmap:makeNewRoom( roomname, roomdesc, roomexits, checkedcommand)
 	--makes a new room obviously
 	local roomID  = createRoomID()
@@ -2292,11 +2430,16 @@ function tmap:checkCoords(RoomId, dir, roomname, roomdesc)
 				end
 			else
 				--there is no direction to the next room, but there is a conflict, half
-				--the scale and put room there
+				--the scale and put room there, unless it's up/down
 				tmap.priorMapScale = tmap.mapScale
 				tmap.mapScale = tmap.mapScale/2
 				tmap:calculateMapOffset()
-				return nil
+				if (location[3] ~= newloc[3]) then
+					display(&quot;HERE&quot;)
+					tmap.prompter:decisionBox(&quot;Room conflict&quot;, &quot;A room exists in the direction you wish to go.  &lt;br&gt;Press Automove to move the old room, Cancel&lt;br&gt; Creation to cancel movement and manually &lt;br&gt;manage the conflict.&quot;,&quot;Automove&quot;, &quot;Cancel Creation&quot;)
+					tmap.prompter.lastId,tmap.prompter.cid,tmap.prompter.checkedcommand,tmap.prompter.newLoc,tmap.prompter.roomname, tmap.prompter.roomdesc, tmap.prompter.roomexits = tmap.lastId,firstconflict,dir,newloc,roomname,roomdesc,roomexits
+				end
+				return firstconflict
 			end
 		end
 	end	
