@@ -2582,6 +2582,6 @@ end</script>
     </ScriptPackage>
     <KeyPackage/>
     <HelpPackage>
-        <helpURL>index.html</helpURL>
+        <helpURL>https://github.com/Chris7/3k-Scripts/wiki</helpURL>
     </HelpPackage>
 </MudletPackage>
