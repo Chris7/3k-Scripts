@@ -1498,11 +1498,14 @@ function tmap:getAllExits(roomId)
 	local specials = getSpecialExits(roomId)
 	if specials then
 	   for i,v in pairs(getSpecialExits(roomId)) do
-			sexits[i]=v
+			for j,k in pairs(v) do
+				if k == &quot;0&quot; then
+					exits[j]=i
+				end
+			end
 		end
 	end
-	sexits = tmap:swapKeysValues(sexits)
-   return tmap:concatTables(exits,sexits)
+   return exits
 end</script>
                     <eventHandlerList/>
                 </Script>
@@ -1625,10 +1628,7 @@ tmap.reversedir = {[1]=6, [2]=8, [3]=7,[4]=5,[5]=4,[6]=1,[7]=3,[8]=2,[9]=10,[10]
 tmap.speedwalking = nil
 tmap.mapspecial = nil
 tmap.mapfollow = 1
-local var = getMapLocation()
-if var then
-	tmap.lastId = var
-	tmap.UserArea=getRoomArea(tmap.lastId)
+if tmap.lastId then
 	centerview(tmap.lastId)
 end</script>
                     <eventHandlerList/>
@@ -1913,6 +1913,7 @@ end
 				return tmap.moveStop
 			end
 		end
+--[[
 		if (tmap.lastId) then
 			local mapw,maph = getMapSize()
 			local x,y,z
@@ -1930,8 +1931,9 @@ end
 				updateMap()
 			end
 		else
+]]
 			centerview(roomid)
-		end
+	--	end
 		tmap.lastId = roomid
 		tmap.UserArea = getRoomArea(roomid)
 --		updateRoomInfo()
@@ -2073,6 +2075,8 @@ function tmap:playerFound(roomId)
 	tmap:echo(&quot;Found&quot;)
 	tmap:onPlayerMove(roomId)
 	tmap.findme = nil
+   tmap.roomsToWalk = nil
+   tmap.mapspecial = nil
 	tmap.comTable = {}
 end
 
@@ -2223,6 +2227,9 @@ end</script>
                     <packageName></packageName>
                     <script>function tmap:onUpdateRoom( roomname, roomdesc, roomexits)
 	local roomID = tmap.lastId
+	if not roomID then
+		return
+	end
 	display(&quot;updating&quot;)
 	setRoomName( roomID, tmap:convertRoomName(roomname ))
 	setRoomUserData(roomID, &quot;description&quot;, roomdesc)
@@ -2230,16 +2237,16 @@ end</script>
 	 newexits = tmap:splitExits(roomexits)
     --make exit stubs, first nuke the old ones
 	 for i,v in pairs(getExitStubs(roomID)) do
-		setExitStub(roomID, v,0)
+		setExitStub(roomID, v,false)
 	 end
     local existingExits = getRoomExits(roomID)
     for i,v in pairs(newexits) do
 		  if tmap.carddirtypes[v] then
 	        if #existingExits == 0 and tmap.carddirtypes[v] &lt; 11 then
-   	         setExitStub(roomID, tmap.carddirtypes[v],1)
+   	         setExitStub(roomID, tmap.carddirtypes[v],true)
    	     else
    	         if not existingExits[v] and tmap.carddirtypes[v] &lt; 11 then
-   	             setExitStub(roomID, tmap.carddirtypes[v],1)
+   	             setExitStub(roomID, tmap.carddirtypes[v],true)
    	         end
    	     end
 		  end
@@ -2294,10 +2301,10 @@ function tmap:makeNewRoom( roomname, roomdesc, roomexits, checkedcommand)
     for i,v in pairs(newexits) do
 		if tmap.carddirtypes[v] then
         if #existingExits == 0 and tmap.carddirtypes[v] then
-            setExitStub(roomID, tmap.carddirtypes[v],1)
+            setExitStub(roomID, tmap.carddirtypes[v],true)
         else
             if not existingExits[v] and tmap.carddirtypes[v] then
-                setExitStub(roomID, tmap.carddirtypes[v],1)
+                setExitStub(roomID, tmap.carddirtypes[v],false)
             end
         end
 		end
@@ -2435,7 +2442,6 @@ function tmap:checkCoords(RoomId, dir, roomname, roomdesc)
 				tmap.mapScale = tmap.mapScale/2
 				tmap:calculateMapOffset()
 				if (location[3] ~= newloc[3]) then
-					display(&quot;HERE&quot;)
 					tmap.prompter:decisionBox(&quot;Room conflict&quot;, &quot;A room exists in the direction you wish to go.  &lt;br&gt;Press Automove to move the old room, Cancel&lt;br&gt; Creation to cancel movement and manually &lt;br&gt;manage the conflict.&quot;,&quot;Automove&quot;, &quot;Cancel Creation&quot;)
 					tmap.prompter.lastId,tmap.prompter.cid,tmap.prompter.checkedcommand,tmap.prompter.newLoc,tmap.prompter.roomname, tmap.prompter.roomdesc, tmap.prompter.roomexits = tmap.lastId,firstconflict,dir,newloc,roomname,roomdesc,roomexits
 				end
@@ -2541,12 +2547,41 @@ end</script>
                         <string>setPlayerLocation</string>
                     </eventHandlerList>
                 </Script>
+                <Script isActive="yes" isFolder="no">
+                    <name>sysLoadEvent</name>
+                    <packageName></packageName>
+                    <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+function sysLoadEvent(event)
+	table.load(getMudletHomeDir()..&quot;/tmapinfo.lua&quot;, tmap)
+end</script>
+                    <eventHandlerList>
+                        <string>sysLoadEvent</string>
+                    </eventHandlerList>
+                </Script>
+                <Script isActive="yes" isFolder="no">
+                    <name>sysExitEvent</name>
+                    <packageName></packageName>
+                    <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+function sysExitEvent(event)
+	table.load(getMudletHomeDir()..&quot;/tmapinfo.lua&quot;, tmap)
+end</script>
+                    <eventHandlerList>
+                        <string>sysExitEvent</string>
+                    </eventHandlerList>
+                </Script>
             </ScriptGroup>
         </ScriptGroup>
     </ScriptPackage>
     <KeyPackage/>
     <HelpPackage>
-        <helpURL></helpURL>
-        <helpHTML></helpHTML>
+        <helpURL>index.html</helpURL>
     </HelpPackage>
 </MudletPackage>
