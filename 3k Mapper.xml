@@ -2012,6 +2012,7 @@ end</script>
 	if tSize==1 then
 		for id,_ in pairs(tmap.searchCan) do
 			tmap:onPlayerMove(id)
+			expandAlias(&quot;tmap move &quot;..tmap.comTable,false)
 			tmap.searchMode=nil
 			return
 		end
@@ -2035,6 +2036,7 @@ end</script>
 		for id,_ in pairs(tmap.searchCan) do
 			tmap:onPlayerMove(id)
 			tmap.searchMode=nil
+			expandAlias(&quot;tmap move &quot;..tmap.comTable,false)
 			return
 		end
 	end
@@ -2571,10 +2573,79 @@ end</script>
 -- Note that you can also use external Scripts --
 -------------------------------------------------
 function sysExitEvent(event)
-	table.load(getMudletHomeDir()..&quot;/tmapinfo.lua&quot;, tmap)
+	table.save(getMudletHomeDir()..&quot;/tmapinfo.lua&quot;, tmap)
 end</script>
                     <eventHandlerList>
                         <string>sysExitEvent</string>
+                    </eventHandlerList>
+                </Script>
+                <Script isActive="yes" isFolder="no">
+                    <name>Mapper Events</name>
+                    <packageName></packageName>
+                    <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+function clearDirQueue(...)
+	expandAlias(&quot;tmap dirclear&quot;,false)
+	tmap:echo(&quot;Direction queue cleared!&quot;)
+end
+
+function enableMapper(...)
+	expandAlias(&quot;tmap mapon&quot;,false)
+end
+
+function tempMapper(...)
+	expandAlias(&quot;tmap mapon temp&quot;,false)
+end
+
+function followMapper(...)
+	expandAlias(&quot;tmap follow&quot;, false)
+end
+
+function findme(...)
+	expandAlias(&quot;tmap findme&quot;, false)
+end
+
+function searchMode(...)
+	expandAlias(&quot;tmap searchMode&quot;, false)
+end</script>
+                    <eventHandlerList>
+                        <string>enableMapper</string>
+                        <string>clearDirQueue</string>
+                        <string>tempMapper</string>
+                        <string>followMapper</string>
+                        <string>findme</string>
+                        <string>searchMode</string>
+                    </eventHandlerList>
+                </Script>
+                <Script isActive="yes" isFolder="no">
+                    <name>mapOpenEvent</name>
+                    <packageName></packageName>
+                    <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+function mapOpenEvent(event)
+	addMapMenu(&quot;Mapper&quot;)
+	addMapEvent(&quot;Clear Direction Queue&quot;, &quot;clearDirQueue&quot;, &quot;Mapper&quot;)
+	registerAnonymousEventHandler(&quot;clearDirQueue&quot;, &quot;clearDirQueue&quot;)
+	addMapMenu(&quot;Mapping Modes&quot;, &quot;Mapper&quot;)
+	addMapEvent(&quot;Map Creation&quot;, &quot;enableMapper&quot;, &quot;Mapping Modes&quot;)
+	addMapEvent(&quot;Temporary Mapping Mode&quot;, &quot;tempMapper&quot;, &quot;Mapping Modes&quot;)
+	addMapEvent(&quot;Follow Us&quot;, &quot;followMapper&quot;, &quot;Mapping Modes&quot;)
+	registerAnonymousEventHandler(&quot;enableMapper&quot;, &quot;enableMapper&quot;)
+	registerAnonymousEventHandler(&quot;tempMapper&quot;, &quot;tempMapper&quot;)
+	registerAnonymousEventHandler(&quot;followMapper&quot;, &quot;followMapper&quot;)
+	addMapEvent(&quot;Find me!&quot;, &quot;findme&quot;, &quot;Mapper&quot;)
+	registerAnonymousEventHandler(&quot;findme&quot;, &quot;findme&quot;)
+	addMapEvent(&quot;Search Mode!&quot;, &quot;searchMode&quot;, &quot;Mapper&quot;)
+	registerAnonymousEventHandler(&quot;searchMode&quot;, &quot;searchMode&quot;)
+end</script>
+                    <eventHandlerList>
+                        <string>mapOpenEvent</string>
                     </eventHandlerList>
                 </Script>
             </ScriptGroup>
