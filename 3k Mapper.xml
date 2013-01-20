@@ -1831,7 +1831,7 @@ function tmap:roomLabel(input)
 
   -- finally: do it :)
 
-  local lid = createMapLabel(getRoomArea(room), message, x+dx, y+dy, z+dz, f1,f2,f3, b1,b2,b3)
+  local lid = createMapLabel(getRoomArea(room), message, x+dx, y+dy, z+dz, f1,f2,f3, b1,b2,b3,0,12)
   tmap:echo(string.format(&quot;Created new label #%d '%s' in %s.&quot;, lid, message, getRoomAreaName(getRoomArea(room))))
   local labels = getRoomUserData(room, &quot;mapLabels&quot;)
   local labelRep = tostring(getRoomArea(room))..'.'..tostring(lid)
