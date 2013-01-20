@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.0">
+    <TriggerPackage>
+        <TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+            <name>MIP</name>
+            <script></script>
+            <triggerType>0</triggerType>
+            <conditonLineDelta>0</conditonLineDelta>
+            <mStayOpen>0</mStayOpen>
+            <mCommand></mCommand>
+            <packageName></packageName>
+            <mFgColor>#ff0000</mFgColor>
+            <mBgColor>#ffff00</mBgColor>
+            <mSoundFile></mSoundFile>
+            <colorTriggerFgColor>#000000</colorTriggerFgColor>
+            <colorTriggerBgColor>#000000</colorTriggerBgColor>
+            <regexCodeList/>
+            <regexCodePropertyList/>
+            <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="yes" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+                <name>MIP Capture</name>
+                <script>--deleteLine()
+--echo(&quot;\n#K%&quot;..matches[2]..matches[3]..matches[4]..string.sub(matches[5],1,tonumber(matches[3])-3)..&quot;\n&quot;)
+local iter=0
+local mLen
+local mCode
+for i,v in pairs(matches) do
+	if iter==2 then
+		mLen=tonumber(v)
+	elseif iter==3 then
+		mCode=v
+		local mLine = getCurrentLine()
+		local mStart = string.find(mLine,&quot;#K%%&quot;)
+		local entry = string.sub(mLine,mStart,mStart+mLen+10)
+		processMIP(entry,mCode)
+		selectString(entry,1)
+		replace(&quot;&quot;)
+	end
+	if iter==3 then
+		iter=0
+	else
+		iter=iter+1
+	end
+end
+if getCurrentLine() == &quot;&quot; then
+	deleteLine()
+end</script>
+                <triggerType>0</triggerType>
+                <conditonLineDelta>0</conditonLineDelta>
+                <mStayOpen>0</mStayOpen>
+                <mCommand></mCommand>
+                <packageName></packageName>
+                <mFgColor>#ff0000</mFgColor>
+                <mBgColor>#ffff00</mBgColor>
+                <mSoundFile></mSoundFile>
+                <colorTriggerFgColor>#000000</colorTriggerFgColor>
+                <colorTriggerBgColor>#000000</colorTriggerBgColor>
+                <regexCodeList>
+                    <string>#K%([0-9]{5,5})([0-9]{3,3})([A-Z]{3,3})</string>
+                </regexCodeList>
+                <regexCodePropertyList>
+                    <integer>1</integer>
+                </regexCodePropertyList>
+            </Trigger>
+        </TriggerGroup>
+    </TriggerPackage>
+    <TimerPackage/>
+    <AliasPackage>
+        <AliasGroup isActive="yes" isFolder="yes">
+            <name>MIP</name>
+            <script></script>
+            <command></command>
+            <packageName></packageName>
+            <regex></regex>
+            <Alias isActive="yes" isFolder="no">
+                <name>start mip</name>
+                <script>require(&quot;math&quot;)
+local code = math.random(10000,30000)
+send(&quot;3klient &quot;..code..&quot;~mudlet&quot;)</script>
+                <command></command>
+                <packageName></packageName>
+                <regex>^startMIP$</regex>
+            </Alias>
+        </AliasGroup>
+    </AliasPackage>
+    <ActionPackage/>
+    <ScriptPackage>
+        <ScriptGroup isActive="yes" isFolder="yes">
+            <name>MIP</name>
+            <packageName></packageName>
+            <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+</script>
+            <eventHandlerList/>
+            <Script isActive="yes" isFolder="no">
+                <name>MIP</name>
+                <packageName></packageName>
+                <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+--local a = &quot;#K%10401051BADUnder the eastern gates of Westersea (n,s,w,out)#K%10401051BADUnder the eastern gates of Westersea (n,s,w,out)#K%10401051BADUnder the eastern gates of Westersea (n,s,w,out)#K%10401051BADUnder the eastern gates of Westersea (n,s,w,out)&quot;
+function captureMIP(a)
+if (a:find(&quot;#K%%%d%d%d%d%d%d%d%d&quot;)) then
+	local pos = a:find(&quot;#K%%&quot;)
+	a = string.sub(a,pos+3)
+	pos = a:find(&quot;%d%d%d%d%d&quot;)
+	local secCode = string.sub(a,pos,pos+4)
+	a = string.sub(a,pos+5)
+	pos = a:find(&quot;%d%d%d&quot;)
+	local lineLength = tonumber(string.sub(a,pos,pos+2))
+	a = string.sub(a,pos+3)
+	pos = a:find(&quot;%a%a%a&quot;)
+	local mipCode = string.sub(a,pos,pos+2)
+	local mipLine = string.sub(a,pos+3,lineLength)
+	a = string.sub(a,lineLength+1)
+	processMIP(mipCode,mipLine)
+	return a
+else
+return nil
+end
+end
+
+function processMIP(entry, code)
+	if (code == &quot;FFF&quot;) then
+		processHpBar(entry)
+	elseif (code == &quot;CAA&quot;) then
+		chatReceived(entry)
+	elseif (code == &quot;BAB&quot;) then
+		tellReceived(entry)
+	else
+	end
+end
+
+function tellReceived(entry)
+	for i,v in ipairs(string.split(entry,&quot;~&quot;)) do
+		if (i == 3) then
+		end
+	end
+end
+
+function chatReceived(entry)
+end
+
+function processHpBar(entry)
+	local code, value
+	entry = string.sub(entry,15,-1)
+	for i,v in pairs(string.split(entry,&quot;~&quot;)) do
+		if i%2 == 0 then
+			if (code == &quot;A&quot;) then
+				hp=tonumber(v)
+			elseif (code == &quot;C&quot;) then
+				sp = tonumber(v)
+			elseif (code == &quot;E&quot;) then
+				np = tonumber(v)
+			elseif (code == &quot;L&quot;) then
+				enemyhealth = tonumber(v)
+			elseif (code == &quot;K&quot;) then
+				enemy = v
+			elseif (code == &quot;G&quot;) then
+				reset = tonumber(v)
+			elseif (code == &quot;J&quot;) then --don't care about
+			elseif (code == &quot;I&quot;) then
+			else
+				echo(code..&quot;,&quot;..v..&quot;\n&quot;)
+			end
+--G = reset
+		else
+			code=v
+		end
+	end
+	--updateHpbar()
+end</script>
+                <eventHandlerList/>
+            </Script>
+        </ScriptGroup>
+    </ScriptPackage>
+    <KeyPackage/>
+    <HelpPackage>
+        <helpURL></helpURL>
+        <helpHTML></helpHTML>
+    </HelpPackage>
+</MudletPackage>
