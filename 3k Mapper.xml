@@ -2559,6 +2559,11 @@ end</script>
 -------------------------------------------------
 function sysLoadEvent(event)
 	table.load(getMudletHomeDir()..&quot;/tmapinfo.lua&quot;, tmap)
+	--remove temp stuff that shouldn't persist
+	tmap.speedwalking = nil
+	tmap.mapspecial = nil
+	tmap.mapfollow = 1
+	tmap.pWimpy = nil
 end</script>
                     <eventHandlerList>
                         <string>sysLoadEvent</string>
@@ -2654,5 +2659,6 @@ end</script>
     <KeyPackage/>
     <HelpPackage>
         <helpURL>https://github.com/Chris7/3k-Scripts/wiki</helpURL>
+        <helpHTML></helpHTML>
     </HelpPackage>
 </MudletPackage>
