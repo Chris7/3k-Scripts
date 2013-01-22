@@ -32,7 +32,7 @@ for i,v in pairs(matches) do
 		local mLine = getCurrentLine()
 		local mStart = string.find(mLine,&quot;#K%%&quot;)
 		local entry = string.sub(mLine,mStart,mStart+mLen+10)
-		processMIP(entry,mCode)
+		mip:processMIP(entry,mCode)
 		selectString(entry,1)
 		replace(&quot;&quot;)
 	end
@@ -104,67 +104,80 @@ send(&quot;3klient &quot;..code..&quot;~mudlet&quot;)</script>
 -- Note that you can also use external Scripts --
 -------------------------------------------------
 --local a = &quot;#K%10401051BADUnder the eastern gates of Westersea (n,s,w,out)#K%10401051BADUnder the eastern gates of Westersea (n,s,w,out)#K%10401051BADUnder the eastern gates of Westersea (n,s,w,out)#K%10401051BADUnder the eastern gates of Westersea (n,s,w,out)&quot;
-function captureMIP(a)
-if (a:find(&quot;#K%%%d%d%d%d%d%d%d%d&quot;)) then
-	local pos = a:find(&quot;#K%%&quot;)
-	a = string.sub(a,pos+3)
-	pos = a:find(&quot;%d%d%d%d%d&quot;)
-	local secCode = string.sub(a,pos,pos+4)
-	a = string.sub(a,pos+5)
-	pos = a:find(&quot;%d%d%d&quot;)
-	local lineLength = tonumber(string.sub(a,pos,pos+2))
-	a = string.sub(a,pos+3)
-	pos = a:find(&quot;%a%a%a&quot;)
-	local mipCode = string.sub(a,pos,pos+2)
-	local mipLine = string.sub(a,pos+3,lineLength)
-	a = string.sub(a,lineLength+1)
-	processMIP(mipCode,mipLine)
-	return a
-else
-return nil
+if not mip then
+	mip = {}
 end
+function mip:captureMIP(a)
+	if (a:find(&quot;#K%%%d%d%d%d%d%d%d%d&quot;)) then
+		local pos = a:find(&quot;#K%%&quot;)
+		a = string.sub(a,pos+3)
+		pos = a:find(&quot;%d%d%d%d%d&quot;)
+		local secCode = string.sub(a,pos,pos+4)
+		a = string.sub(a,pos+5)
+		pos = a:find(&quot;%d%d%d&quot;)
+		local lineLength = tonumber(string.sub(a,pos,pos+2))
+		a = string.sub(a,pos+3)
+		pos = a:find(&quot;%a%a%a&quot;)
+		local mipCode = string.sub(a,pos,pos+2)
+		local mipLine = string.sub(a,pos+3,lineLength)
+		a = string.sub(a,lineLength+1)
+		mip:processMIP(mipCode,mipLine)
+		return a
+	else
+		return nil
+	end
 end
 
-function processMIP(entry, code)
+function mip:processMIP(entry, code)
 	if (code == &quot;FFF&quot;) then
-		processHpBar(entry)
+		mip:processHpBar(entry)
 	elseif (code == &quot;CAA&quot;) then
-		chatReceived(entry)
+		mip:chatReceived(entry)
 	elseif (code == &quot;BAB&quot;) then
-		tellReceived(entry)
+		mip:tellReceived(entry)
 	else
 	end
 end
 
-function tellReceived(entry)
+function mip:tellReceived(entry)
 	for i,v in ipairs(string.split(entry,&quot;~&quot;)) do
 		if (i == 3) then
 		end
 	end
 end
 
-function chatReceived(entry)
+function mip:chatReceived(entry)
 end
 
-function processHpBar(entry)
+function mip:processHpBar(entry)
 	local code, value
 	entry = string.sub(entry,15,-1)
 	for i,v in pairs(string.split(entry,&quot;~&quot;)) do
 		if i%2 == 0 then
 			if (code == &quot;A&quot;) then
-				hp=tonumber(v)
+				mip.hpcur=tonumber(v)
+			elseif (code == &quot;B&quot;) then
+				mip.hpmax=tonumber(v)
 			elseif (code == &quot;C&quot;) then
-				sp = tonumber(v)
+				mip.spcur = tonumber(v)
+			elseif (code == &quot;D&quot;) then
+				mip.spmax = tonumber(v)
 			elseif (code == &quot;E&quot;) then
-				np = tonumber(v)
-			elseif (code == &quot;L&quot;) then
-				enemyhealth = tonumber(v)
-			elseif (code == &quot;K&quot;) then
-				enemy = v
+				mip.gp1 = tonumber(v)
+			elseif (code == &quot;F&quot;) then
+				mip.gp1max = tonumber(v)
 			elseif (code == &quot;G&quot;) then
-				reset = tonumber(v)
-			elseif (code == &quot;J&quot;) then --don't care about
+				mip.gp2 = tonumber(v)
+			elseif (code == &quot;H&quot;) then
+				mip.gp2max = tonumber(v)
 			elseif (code == &quot;I&quot;) then
+				mip.gline1 = v
+			elseif (code == &quot;J&quot;) then
+				mip.gline2 = v
+			elseif (code == &quot;K&quot;) then
+				mip.enemy = v
+			elseif (code == &quot;L&quot;) then
+				mip.enemyhealth = tonumber(v)
 			else
 				echo(code..&quot;,&quot;..v..&quot;\n&quot;)
 			end
@@ -173,7 +186,91 @@ function processHpBar(entry)
 			code=v
 		end
 	end
-	--updateHpbar()
+	mip:updateHpbar()
+end</script>
+                <eventHandlerList/>
+            </Script>
+            <Script isActive="yes" isFolder="no">
+                <name>Gauges</name>
+                <packageName></packageName>
+                <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+local w,h = getMainWindowSize()
+createGauge(&quot;hp&quot;, 200, 25, 0, h-25*6-5, nil, &quot;green&quot;)
+createGauge(&quot;sp&quot;, 200, 25, 0, h-25*5-5, nil, &quot;blue&quot;)
+createGauge(&quot;gp1&quot;, 200, 25, 0, h-25*4-5, nil, &quot;green&quot;)
+createGauge(&quot;gp2&quot;, 200, 25, 0, h-25*3-5, nil, &quot;purple&quot;)
+createGauge(&quot;enemy&quot;, 200, 25, 0, h-25*2-5, nil, &quot;red&quot;)
+mip.gline1con = Geyser.MiniConsole:new({
+      name=&quot;gline1con&quot;,
+		x=0,
+		y=h-25,
+		width=w/2,
+		height=25,
+    })
+mip.gline2con = Geyser.MiniConsole:new({
+      name=&quot;gline2con&quot;,
+		x=400,
+		y=h-25,
+		width=w/2,
+		height=25,
+    })
+mip.gline1con:setColor(&quot;black&quot;)
+mip.gline2con:setColor(&quot;black&quot;)
+mip.colorMap = {r=&quot;red&quot;, y=&quot;yellow&quot;, g=&quot;green&quot;, c=&quot;cyan&quot;, v=&quot;violet&quot;}
+
+function replaceColor(color, value)
+	if mip.colorMap[color] then
+		color = mip.colorMap[color]
+	else
+		return color..&quot;-&quot;..value
+	end
+	--	return color..&quot;-&quot;..value
+	return &quot;&lt;&quot;..color..&quot;&gt;&quot;..value..&quot;&lt;reset&gt;&quot;
+end
+
+function mip:doColor(gline)
+--	display(string.gsub(gline,&quot;&lt;(.)([^&gt;]+)&gt;&quot;, replaceColor))
+	return string.gsub(gline,&quot;&lt;(.)([^&gt;]+)&gt;&quot;, replaceColor)
+end
+
+function mip:updateHpbar()
+	if (mip.hpmax and mip.hpcur) then
+		setGauge(&quot;hp&quot;, mip.hpcur, mip.hpmax,&quot;&lt;center&gt;&quot;..tostring(mip.hpcur)..&quot;&lt;/center&gt;&quot;)
+	end
+	if (mip.spcur and mip.spmax) then
+		setGauge(&quot;sp&quot;, mip.spcur, mip.spmax,&quot;&lt;center&gt;&quot;..tostring(mip.spcur)..&quot;&lt;/center&gt;&quot;)
+	end
+	if (mip.gp1) then
+		if mip.gp1max then
+			setGauge(&quot;gp1&quot;, mip.gp1, mip.gp1max,&quot;&lt;center&gt;&quot;..tostring(mip.gp1)..&quot;&lt;/center&gt;&quot;)
+		else
+			setGauge(&quot;gp1&quot;, mip.gp1, 100,&quot;&lt;center&gt;&quot;..tostring(mip.gp1)..&quot;&lt;/center&gt;&quot;)
+		end
+	end
+	if (mip.gp2) then
+		if mip.gp2max then
+			setGauge(&quot;gp2&quot;, mip.gp2, mip.gp2max,&quot;&lt;center&gt;&quot;..tostring(mip.gp2)..&quot;&lt;/center&gt;&quot;)
+		else
+			setGauge(&quot;gp2&quot;, mip.gp2, 100,&quot;&lt;center&gt;&quot;..tostring(mip.gp2)..&quot;&lt;/center&gt;&quot;)
+		end
+	end
+	if (mip.gline1) then
+		local gstr = mip:doColor(mip.gline1)
+		clearWindow(&quot;gline1con&quot;)
+		mip.gline1con:cecho(gstr)--string.sub(gstr,1,string.len(gstr)))
+	end
+	if (mip.gline2) then
+		local gstr = mip:doColor(mip.gline2)
+		clearWindow(&quot;gline2con&quot;)
+		mip.gline2con:cecho(gstr)--string.sub(gstr,1,string.len(gstr)))
+	end
+	if (mip.enemy) then
+		setGauge(&quot;enemy&quot;, mip.enemyhealth, 100, &quot;&lt;center&gt;&quot;..mip.enemy..&quot;&lt;/center&gt;&quot;)
+	end
 end</script>
                 <eventHandlerList/>
             </Script>
@@ -182,6 +279,5 @@ end</script>
     <KeyPackage/>
     <HelpPackage>
         <helpURL></helpURL>
-        <helpHTML></helpHTML>
     </HelpPackage>
 </MudletPackage>
