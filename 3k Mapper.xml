@@ -124,7 +124,9 @@ end
 if roomContents then
 	roomContents[&quot;objects&quot;] = {}
 end
-tmap.roomEntered = true</script>
+tmap.roomEntered = true
+selectString(&quot;¡&quot;,1)
+replace(&quot;&quot;)</script>
                         <triggerType>0</triggerType>
                         <conditonLineDelta>11</conditonLineDelta>
                         <mStayOpen>0</mStayOpen>
@@ -1154,6 +1156,32 @@ end</script>
                     <packageName></packageName>
                     <regex>^tmap addalias &quot;(.+)&quot; (.+)$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Rename an area</name>
+                    <script>--renames current area
+local Name = matches[2]
+local cArea = getRoomArea(tmap.lastId)
+setAreaName( cArea, Name )</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^tmap renamearea (.+)$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Connect all stub in area</name>
+                    <script>local aid = getRoomArea(tmap.lastId)
+local rooms = getAreaRooms(aid)
+for i,v in pairs(rooms) do
+	local stubs = getExitStubs(v)
+	if stubs then
+		for j,k in pairs(stubs) do
+			connectExitStub(v,k)
+		end
+	end
+end</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^tmap connectstubs$</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
@@ -1628,6 +1656,7 @@ tmap.reversedir = {[1]=6, [2]=8, [3]=7,[4]=5,[5]=4,[6]=1,[7]=3,[8]=2,[9]=10,[10]
 tmap.speedwalking = nil
 tmap.mapspecial = nil
 tmap.mapfollow = 1
+tmap.connectStubs = false
 if tmap.lastId then
 	centerview(tmap.lastId)
 end</script>
@@ -2425,7 +2454,7 @@ function tmap:checkCoords(RoomId, dir, roomname, roomdesc)
 				return nil
 			end
 		else
-			tmap:echo(&quot; without exit\n&quot;)
+			tmap:echo(&quot; without matching exit\n&quot;)
 			--no direction to this room, but a room exists in that direction, is it an unconnected room?
 			local roominfo = tmap:checkRoomInfo(firstconflict, roomdesc, roomname)
 			if roominfo then
@@ -2440,6 +2469,7 @@ function tmap:checkCoords(RoomId, dir, roomname, roomdesc)
 			else
 				--there is no direction to the next room, but there is a conflict, half
 				--the scale and put room there, unless it's up/down
+				tmap:echo(&quot;Changing map scale and creating room&quot;)
 				tmap.priorMapScale = tmap.mapScale
 				tmap.mapScale = tmap.mapScale/2
 				tmap:calculateMapOffset()
@@ -2564,6 +2594,13 @@ function sysLoadEvent(event)
 	tmap.mapspecial = nil
 	tmap.mapfollow = 1
 	tmap.pWimpy = nil
+	tmap.comTable = {}
+	tmap.roomsToWalk = nil
+	tmap.roomsToDelete = {}
+	tmap.findme = nil
+	tmap.searchMode = nil
+	tmap.updateRoom = nil
+	tmap.firstRoom = false
 end</script>
                     <eventHandlerList>
                         <string>sysLoadEvent</string>
@@ -2659,6 +2696,5 @@ end</script>
     <KeyPackage/>
     <HelpPackage>
         <helpURL>https://github.com/Chris7/3k-Scripts/wiki</helpURL>
-        <helpHTML></helpHTML>
     </HelpPackage>
 </MudletPackage>
