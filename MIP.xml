@@ -44,7 +44,8 @@ for i,v in pairs(matches) do
 end
 if getCurrentLine() == &quot;&quot; then
 	deleteLine()
-end</script>
+end
+doPrompt()</script>
                 <triggerType>0</triggerType>
                 <conditonLineDelta>0</conditonLineDelta>
                 <mStayOpen>0</mStayOpen>
@@ -140,13 +141,17 @@ function mip:processMIP(entry, code)
 end
 
 function mip:tellReceived(entry)
-	for i,v in ipairs(string.split(entry,&quot;~&quot;)) do
-		if (i == 3) then
-		end
+	entry = string.split(entry,&quot;~&quot;)
+	if (string.find(entry[1],&quot;BABx&quot;) == nil) then
+		mip.chatwindow:cecho(&quot;&lt;cyan&gt;&quot;..entry[2]..&quot;&lt;reset&gt;:&lt;white&gt;&quot;..entry[3]..&quot;&lt;reset&gt;\n&quot;)
+	else
+		mip.chatwindow:cecho(&quot;&lt;cyan&gt;To &quot;..entry[2]..&quot;&lt;reset&gt;:&lt;white&gt;&quot;..entry[3]..&quot;&lt;reset&gt;\n&quot;)
 	end
 end
 
 function mip:chatReceived(entry)
+	entry = string.split(entry,&quot;~&quot;)
+	mip.chatwindow:echo(entry[4]..&quot;\n&quot;)
 end
 
 function mip:processHpBar(entry)
@@ -204,22 +209,14 @@ createGauge(&quot;sp&quot;, 200, 25, 0, h-25*5-5, nil, &quot;blue&quot;)
 createGauge(&quot;gp1&quot;, 200, 25, 0, h-25*4-5, nil, &quot;green&quot;)
 createGauge(&quot;gp2&quot;, 200, 25, 0, h-25*3-5, nil, &quot;purple&quot;)
 createGauge(&quot;enemy&quot;, 200, 25, 0, h-25*2-5, nil, &quot;red&quot;)
-mip.gline1con = Geyser.MiniConsole:new({
+mip.glineinfo = Geyser.MiniConsole:new({
       name=&quot;gline1con&quot;,
 		x=0,
 		y=h-25,
-		width=w/2,
+		width=w,
 		height=25,
     })
-mip.gline2con = Geyser.MiniConsole:new({
-      name=&quot;gline2con&quot;,
-		x=400,
-		y=h-25,
-		width=w/2,
-		height=25,
-    })
-mip.gline1con:setColor(&quot;black&quot;)
-mip.gline2con:setColor(&quot;black&quot;)
+mip.glineinfo:setColor(&quot;black&quot;)
 mip.colorMap = {r=&quot;red&quot;, y=&quot;yellow&quot;, g=&quot;green&quot;, c=&quot;cyan&quot;, v=&quot;violet&quot;}
 
 function replaceColor(color, value)
@@ -239,10 +236,18 @@ end
 
 function mip:updateHpbar()
 	if (mip.hpmax and mip.hpcur) then
-		setGauge(&quot;hp&quot;, mip.hpcur, mip.hpmax,&quot;&lt;center&gt;&quot;..tostring(mip.hpcur)..&quot;&lt;/center&gt;&quot;)
+		if (mip.hpcur &gt; mip.hpmax) then
+			setGauge(&quot;hp&quot;, mip.hpcur%mip.hpmax, mip.hpmax,&quot;&lt;center&gt;&quot;..tostring(mip.hpcur)..&quot;&lt;/center&gt;&quot;)
+		else
+			setGauge(&quot;hp&quot;, mip.hpcur, mip.hpmax,&quot;&lt;center&gt;&quot;..tostring(mip.hpcur)..&quot;&lt;/center&gt;&quot;)
+		end
 	end
 	if (mip.spcur and mip.spmax) then
-		setGauge(&quot;sp&quot;, mip.spcur, mip.spmax,&quot;&lt;center&gt;&quot;..tostring(mip.spcur)..&quot;&lt;/center&gt;&quot;)
+		if (mip.spcur &gt; mip.spmax) then
+			setGauge(&quot;sp&quot;, mip.spcur%mip.spmax, mip.spmax, &quot;&lt;center&gt;&quot;..tostring(mip.spcur)..&quot;&lt;/center&gt;&quot;)
+		else
+			setGauge(&quot;sp&quot;, mip.spcur, mip.spmax,&quot;&lt;center&gt;&quot;..tostring(mip.spcur)..&quot;&lt;/center&gt;&quot;)
+		end
 	end
 	if (mip.gp1) then
 		if mip.gp1max then
@@ -258,19 +263,55 @@ function mip:updateHpbar()
 			setGauge(&quot;gp2&quot;, mip.gp2, 100,&quot;&lt;center&gt;&quot;..tostring(mip.gp2)..&quot;&lt;/center&gt;&quot;)
 		end
 	end
-	if (mip.gline1) then
-		local gstr = mip:doColor(mip.gline1)
+	if (mip.gline1 or mip.glone2) then	
 		clearWindow(&quot;gline1con&quot;)
-		mip.gline1con:cecho(gstr)--string.sub(gstr,1,string.len(gstr)))
+		if (mip.gline1) then
+			local gstr = mip:doColor(mip.gline1)
+			mip.glineinfo:cecho(gstr..&quot; | &quot;)--string.sub(gstr,1,string.len(gstr)))
+		end
+		if (mip.gline2) then	
+			local gstr = mip:doColor(mip.gline2)
+			mip.glineinfo:cecho(gstr)--string.sub(gstr,1,string.len(gstr)))
+		end
 	end
-	if (mip.gline2) then
-		local gstr = mip:doColor(mip.gline2)
-		clearWindow(&quot;gline2con&quot;)
-		mip.gline2con:cecho(gstr)--string.sub(gstr,1,string.len(gstr)))
+	if (mip.enemy and mip.enemyhealth) then
+		if (mip.enemyhealth &gt; 100) then
+			setGauge(&quot;enemy&quot;, mip.enemyhealth%100, 100, &quot;&lt;center&gt;&quot;..mip.enemy..&quot;&lt;/center&gt;&quot;)
+		else
+			setGauge(&quot;enemy&quot;, mip.enemyhealth, 100, &quot;&lt;center&gt;&quot;..mip.enemy..&quot;&lt;/center&gt;&quot;)
+		end
 	end
-	if (mip.enemy) then
-		setGauge(&quot;enemy&quot;, mip.enemyhealth, 100, &quot;&lt;center&gt;&quot;..mip.enemy..&quot;&lt;/center&gt;&quot;)
-	end
+end</script>
+                <eventHandlerList/>
+            </Script>
+            <Script isActive="yes" isFolder="no">
+                <name>Chat Monitor</name>
+                <packageName></packageName>
+                <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+local w,h = getMainWindowSize()
+mip.chatwindow = Geyser.MiniConsole:new({
+      name=&quot;mipchatwindow&quot;,
+		x=0,
+		y=h-25*20,
+		width=200,
+		height=200,
+    })
+setWindowWrap(&quot;mipchatwindow&quot;, 25)</script>
+                <eventHandlerList/>
+            </Script>
+            <Script isActive="no" isFolder="no">
+                <name>Prompt Stuff</name>
+                <packageName></packageName>
+                <script>-------------------------------------------------
+--         Put your Lua functions here.        --
+--                                             --
+-- Note that you can also use external Scripts --
+-------------------------------------------------
+function doPrompt()
 end</script>
                 <eventHandlerList/>
             </Script>
