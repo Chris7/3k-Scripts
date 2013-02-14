@@ -196,7 +196,6 @@ end</script>
                 <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
                     <name>WimpyNoDir</name>
                     <script>tmap.pWimpy=1
-tWimpyDisable()
 send(&quot;brief map&quot;)
 send(&quot;look&quot;)</script>
                     <triggerType>0</triggerType>
@@ -426,10 +425,12 @@ else
 		tmap.mapstatus = 1
 		tmap.mapfollow = nil
 		tmap.tMapper = 1
+		send(&quot;brief map&quot;)
 		tmap:echo(&quot;\n TEMPORARY MAPPED ENABLED&quot;)
 	else
 		tmap.mapstatus = 1
 		tmap.mapfollow = nil
+		send(&quot;brief map&quot;)
 		tmap:echo(&quot;\n MAPPER ENABLED&quot;)
 	end
 end</script>
@@ -946,10 +947,11 @@ tmap:echo(&quot;'&lt;red&gt;setroom xxx&lt;reset&gt;', '&lt;red&gt;roominfo&lt;r
                 <Alias isActive="yes" isFolder="no">
                     <name>Room exit trigger setup</name>
                     <script>--this is more or less a shortcut for the common use of an exit script:
-setRoomUserData(tmap.lastId, &quot;exitScript&quot;..matches[2], &quot;tempTrigger(&quot;..matches[3]..&quot;, [[tmap:onFollow(nil)]],true)&quot;)</script>
+local tpattern = [[&quot;]]..matches[3]..[[&quot;]]
+setRoomUserData(tmap.lastId, &quot;exitScript&quot;..matches[2], &quot;tempTrigger(&quot;..tpattern..&quot;, [[tmap:onFollow(nil)]],true)&quot;)</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>^tmap automove &quot;(.+)&quot; .+$</regex>
+                    <regex>^tmap automove &quot;(.+)&quot; (.+)$</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>clear room exit script</name>
@@ -1083,22 +1085,22 @@ local input = matches[2]
 if input and string.find(input, &quot;%d&quot;) then
 	local t = string.split(input, &quot; &quot;)
 	labelnum = t[1]
-elseif input then
+elseif not input or input then
 	tmap:echo(&quot;Syntax: tmap deletelabel labelnum&quot;)
 	tmap:echo(&quot;If there is only one label in a room, labelnum is optional.&quot;)
 	tmap:showRoomLabels(0)
 	return
 end
 local lTable = tmap:getRoomLabels(tmap.lastId)
-if #lTable &gt; 1 and not labelnum then
+if table.size(lTable) &gt; 1 and not labelnum then
 	tmap:showRoomLabels(1)
 	return
 end
-if #lTable == 1 and lTable[1] ~= &quot;&quot; then
+if table.size(lTable) == 1 and lTable[1] ~= &quot;&quot; then
 	tmap:deleteRoomLabel(tmap.lastId,1)
-elseif #lTabel &gt; 1 and labelnum then
+elseif table.size(lTable) &gt; 1 and labelnum then
 	if lTable[labelnum] then
-		tmap:deleteRoomLabel(tmap.lastId,labelnum)
+		tmap:deleteRoomLabel(tmap.lastId,tonumber(labelnum))
 	else
 		tmap:echo(&quot;Label not found.&quot;);
 	end
@@ -1172,7 +1174,7 @@ setAreaName( cArea, Name )</script>
 local rooms = getAreaRooms(aid)
 for i,v in pairs(rooms) do
 	local stubs = getExitStubs(v)
-	if stubs then
+	if stubs and type(stubs) == 'table' then
 		for j,k in pairs(stubs) do
 			connectExitStub(v,k)
 		end
@@ -1525,7 +1527,7 @@ function tmap:getAllExits(roomId)
 	local sexits = {}
 	local specials = getSpecialExits(roomId)
 	if specials then
-	   for i,v in pairs(getSpecialExits(roomId)) do
+	   for i,v in pairs(specials) do
 			for j,k in pairs(v) do
 				if k == &quot;0&quot; then
 					exits[j]=i
@@ -1619,7 +1621,16 @@ end</script>
 	end
 	return set
 end
+--[[
+These are variables the user should set to their desired values (keeping in mind numbers should
+stay numbers, etc)
+]]
+tmap.mapScale = 8 -- distance between rooms
+tmap.connectStubs = false -- if true, autoconnect all exit stubs as we move, else use the alias tmap connectStubs
+tmap.labelSize = 12 -- default label size
 
+
+--Variables that shouldn't be touched, things that shouldn't change
 tmap.comTable = {}
 tmap.dirtable = tmap:Set {&quot;nw&quot;,&quot;n&quot;,&quot;ne&quot;,&quot;w&quot;,&quot;e&quot;,&quot;sw&quot;,&quot;s&quot;,&quot;se&quot;,&quot;u&quot;,&quot;d&quot;}
 tmap.fulldirtable = tmap:Set {&quot;northwest&quot;, &quot;north&quot;, &quot;northeast&quot;, &quot;west&quot;, &quot;east&quot;, &quot;southwest&quot;,
@@ -1631,11 +1642,9 @@ tmap.dirtypes = {north=1, northeast=2, northwest=3, east=4, west=5,
 	south=6, southeast=7, southwest=8, up=9, down=10, [&quot;in&quot;]=11, out=12}
 tmap.carddirtypes = {north=1, northeast=2, northwest=3, east=4, west=5,
 	south=6, southeast=7, southwest=8, up=9, down=10}
-
 tmap.dirnums = {[1]=&quot;north&quot;, [2]=&quot;northeast&quot;, [3]=&quot;northwest&quot;,[4]=&quot;east&quot;,
 	[5]=&quot;west&quot;,[6]=&quot;south&quot;,[7]=&quot;southeast&quot;,[8]=&quot;southwest&quot;,[9]=&quot;up&quot;,[10]=&quot;down&quot;}
 tmap.specialChar = &quot;¡&quot;
-tmap.mapScale = 8
 tmap.priorMapScale = 8
 tmap.unitVectors = {[1]={0,1,0}, [2]={1,1,0}, 
 		[3]={-1,1,0}, [4]={1,0,0},
@@ -1651,12 +1660,10 @@ function tmap:calculateMapOffset()
 		[9]={0,0,1}, [10]={0,0,-1}}
 end
 tmap:calculateMapOffset()
-
 tmap.reversedir = {[1]=6, [2]=8, [3]=7,[4]=5,[5]=4,[6]=1,[7]=3,[8]=2,[9]=10,[10]=9}
 tmap.speedwalking = nil
 tmap.mapspecial = nil
 tmap.mapfollow = 1
-tmap.connectStubs = false
 if tmap.lastId then
 	centerview(tmap.lastId)
 end</script>
@@ -1860,35 +1867,17 @@ function tmap:roomLabel(input)
 
   -- finally: do it :)
 
-  local lid = createMapLabel(getRoomArea(room), message, x+dx, y+dy, z+dz, f1,f2,f3, b1,b2,b3,0,12)
+  local lid = createMapLabel(getRoomArea(room), message, x+dx, y+dy, z+dz, f1,f2,f3, b1,b2,b3,0,tmap.labelSize)
   tmap:echo(string.format(&quot;Created new label #%d '%s' in %s.&quot;, lid, message, getRoomAreaName(getRoomArea(room))))
   local labels = getRoomUserData(room, &quot;mapLabels&quot;)
   local labelRep = tostring(getRoomArea(room))..'.'..tostring(lid)
   --labels is structured like: dir|||id|||label|||x,y,z offset|||fg|||bg!&amp;!dir2|||id|||label|||xyz...
 --  local lTable = string.split(labels,'!&amp;!')
-  if labels ~= &quot;&quot; then
+   if labels ~= &quot;&quot; then
 	  labels = labels..'!&amp;!'..dir..'|||'..labelRep..'|||'..message..'|||'..dOffset..'|||'..fg..'|||'..bg
 	else
 		labels = dir..'|||'..labelRep..'|||'..message..'|||'..dOffset..'|||'..fg..'|||'..bg
 	end
---[[  local dirSet = false
-  for i,v in pairs(lTable) do
-    local entry = string.split(v, '|||')
-	 if entry[1] == &quot;&quot; then
-    elseif entry[1] == dir then
-		oStr = oStr..dir..'|||'..labelRep..'|||'..message..'|||'..dOffset..'|||'..fg..'|||'..bg..'!&amp;!'
-      dirSet = true
-		local linfo = string.split(entry[2], '%.')
-		deleteMapLabel(tonumber(linfo[1]),tonumber(linfo[2]))
-    else
-	 	oStr = oStr..v..'!&amp;!'
-    end
-  end
-  if not dirSet then
-		oStr = oStr..dir..'|||'..labelRep..'|||'..message..'|||'..dOffset..'|||'..fg..'|||'..bg..'!&amp;!' 
-  end
-  oStr = string.sub(oStr,1,-4)
-]]
   setRoomUserData(room, &quot;mapLabels&quot;,labels)
 end
 
