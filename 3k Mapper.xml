@@ -2256,8 +2256,11 @@ end</script>
 	if roomexits then
 	 newexits = tmap:splitExits(roomexits)
     --make exit stubs, first nuke the old ones
-	 for i,v in pairs(getExitStubs(roomID)) do
-		setExitStub(roomID, v,false)
+    local estubs = getExitStubs(roomID)
+	 if type(estubs) == &quot;table&quot; then
+		 for i,v in pairs(estubs) do
+			setExitStub(roomID, v,false)
+		 end
 	 end
     local existingExits = getRoomExits(roomID)
     for i,v in pairs(newexits) do
