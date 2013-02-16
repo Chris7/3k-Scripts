@@ -203,21 +203,6 @@ end</script>
 --                                             --
 -- Note that you can also use external Scripts --
 -------------------------------------------------
-local w,h = getMainWindowSize()
-createGauge(&quot;hp&quot;, 200, 25, 0, h-25*6-5, nil, &quot;green&quot;)
-createGauge(&quot;sp&quot;, 200, 25, 0, h-25*5-5, nil, &quot;blue&quot;)
-createGauge(&quot;gp1&quot;, 200, 25, 0, h-25*4-5, nil, &quot;green&quot;)
-createGauge(&quot;gp2&quot;, 200, 25, 0, h-25*3-5, nil, &quot;purple&quot;)
-createGauge(&quot;enemy&quot;, 200, 25, 0, h-25*2-5, nil, &quot;red&quot;)
-mip.glineinfo = Geyser.MiniConsole:new({
-      name=&quot;gline1con&quot;,
-		x=0,
-		y=h-25,
-		width=w,
-		height=25,
-    })
-mip.glineinfo:setColor(&quot;black&quot;)
-mip.colorMap = {r=&quot;red&quot;, y=&quot;yellow&quot;, g=&quot;green&quot;, c=&quot;cyan&quot;, v=&quot;violet&quot;}
 
 function replaceColor(color, value)
 	if mip.colorMap[color] then
@@ -236,31 +221,32 @@ end
 
 function mip:updateHpbar()
 	if (mip.hpmax and mip.hpcur) then
+--		mip.hpguage:echo(mip.hpcur)
 		if (mip.hpcur &gt; mip.hpmax) then
-			setGauge(&quot;hp&quot;, mip.hpcur%mip.hpmax, mip.hpmax,&quot;&lt;center&gt;&quot;..tostring(mip.hpcur)..&quot;&lt;/center&gt;&quot;)
+			mip.hpgauge:setValue(mip.hpcur%mip.hpmax,mip.hpmax,&quot;&lt;center&gt;&quot;..mip.hpcur..&quot;&lt;/center&gt;&quot;)
 		else
-			setGauge(&quot;hp&quot;, mip.hpcur, mip.hpmax,&quot;&lt;center&gt;&quot;..tostring(mip.hpcur)..&quot;&lt;/center&gt;&quot;)
+			mip.hpgauge:setValue(mip.hpcur,mip.hpmax,&quot;&lt;center&gt;&quot;..mip.hpcur..&quot;&lt;/center&gt;&quot;)
 		end
 	end
 	if (mip.spcur and mip.spmax) then
 		if (mip.spcur &gt; mip.spmax) then
-			setGauge(&quot;sp&quot;, mip.spcur%mip.spmax, mip.spmax, &quot;&lt;center&gt;&quot;..tostring(mip.spcur)..&quot;&lt;/center&gt;&quot;)
+			mip.spgauge:setValue(mip.spcur%mip.spmax,mip.spmax,&quot;&lt;center&gt;&quot;..mip.spcur..&quot;&lt;/center&gt;&quot;)
 		else
-			setGauge(&quot;sp&quot;, mip.spcur, mip.spmax,&quot;&lt;center&gt;&quot;..tostring(mip.spcur)..&quot;&lt;/center&gt;&quot;)
+			mip.spgauge:setValue(mip.spcur,mip.spmax,&quot;&lt;center&gt;&quot;..mip.spcur..&quot;&lt;/center&gt;&quot;)
 		end
 	end
 	if (mip.gp1) then
 		if mip.gp1max then
-			setGauge(&quot;gp1&quot;, mip.gp1, mip.gp1max,&quot;&lt;center&gt;&quot;..tostring(mip.gp1)..&quot;&lt;/center&gt;&quot;)
+			mip.gp1gauge:setValue(mip.gp1, mip.gp1max,&quot;&lt;center&gt;&quot;..tostring(mip.gp1)..&quot;&lt;/center&gt;&quot;)
 		else
-			setGauge(&quot;gp1&quot;, mip.gp1, 100,&quot;&lt;center&gt;&quot;..tostring(mip.gp1)..&quot;&lt;/center&gt;&quot;)
+			mip.gp1gauge:setValue(mip.gp1, 100,&quot;&lt;center&gt;&quot;..tostring(mip.gp1)..&quot;&lt;/center&gt;&quot;)
 		end
 	end
 	if (mip.gp2) then
 		if mip.gp2max then
-			setGauge(&quot;gp2&quot;, mip.gp2, mip.gp2max,&quot;&lt;center&gt;&quot;..tostring(mip.gp2)..&quot;&lt;/center&gt;&quot;)
+			mip.gp2gauge:setValue(mip.gp2, mip.gp2max,&quot;&lt;center&gt;&quot;..tostring(mip.gp2)..&quot;&lt;/center&gt;&quot;)
 		else
-			setGauge(&quot;gp2&quot;, mip.gp2, 100,&quot;&lt;center&gt;&quot;..tostring(mip.gp2)..&quot;&lt;/center&gt;&quot;)
+			mip.gp2gauge:setValue(mip.gp2, 100,&quot;&lt;center&gt;&quot;..tostring(mip.gp2)..&quot;&lt;/center&gt;&quot;)
 		end
 	end
 	if (mip.gline1 or mip.glone2) then	
@@ -276,13 +262,152 @@ function mip:updateHpbar()
 	end
 	if (mip.enemy and mip.enemyhealth) then
 		if (mip.enemyhealth &gt; 100) then
-			setGauge(&quot;enemy&quot;, mip.enemyhealth%100, 100, &quot;&lt;center&gt;&quot;..mip.enemy..&quot;&lt;/center&gt;&quot;)
+			mip.enemygauge:setValue(mip.enemyhealth%100, 100, &quot;&lt;center&gt;&quot;..mip.enemy..&quot;&lt;/center&gt;&quot;)
 		else
-			setGauge(&quot;enemy&quot;, mip.enemyhealth, 100, &quot;&lt;center&gt;&quot;..mip.enemy..&quot;&lt;/center&gt;&quot;)
+			mip.enemygauge:setValue(mip.enemyhealth, 100, &quot;&lt;center&gt;&quot;..mip.enemy..&quot;&lt;/center&gt;&quot;)
 		end
 	end
-end</script>
-                <eventHandlerList/>
+end
+
+function resetSize()
+local w,h = getMainWindowSize()
+if not mip then
+	mip = {}
+end
+mip.gauges = Geyser.Container:new({
+	name=&quot;gaugecontainer&quot;,
+	x=0,
+	y=h-25*8,
+	width=200,
+	height=25*8
+})
+mip.hpgauge = Geyser.Gauge:new({name=&quot;hpbar&quot;, x=&quot;10%&quot;,width=&quot;90%&quot;, height=&quot;15%&quot;},mip.gauges)
+mip.hpgauge.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #98f041, stop: 0.1 #8cf029, stop: 0.49 #66cc00, stop: 0.5 #52a300, stop: 1 #66cc00);
+    border-top: 1px black solid;
+    border-left: 1px black solid;
+    border-bottom: 1px black solid;
+    border-radius: 7;
+    padding: 3px;
+]])
+mip.hpgauge.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #78bd33, stop: 0.1 #6ebd20, stop: 0.49 #4c9900, stop: 0.5 #387000, stop: 1 #4c9900);
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+    border-radius: 7;
+    padding: 3px;
+]])
+mip.hpimage = Geyser.Label:new({
+  name = &quot;hpimage&quot;,
+	x=0,
+  width = &quot;10%&quot;, height = &quot;15%&quot;
+},mip.gauges)
+mip.hpimage:setStyleSheet([[
+	border-image: url(&quot;C:/3k-Scripts/Health.png&quot;);
+]])
+mip.spgauge = Geyser.Gauge:new({name=&quot;spbar&quot;, x=&quot;10%&quot;,y=&quot;20%&quot;,width=&quot;90%&quot;, height=&quot;15%&quot;},mip.gauges)
+mip.spgauge.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #00A5E5, stop: 0.1 #017BDB, stop: 0.49 #0252D2, stop: 0.5 #0329C8, stop: 1 #0500BF);
+    border-top: 1px black solid;
+    border-left: 1px black solid;
+    border-bottom: 1px black solid;
+    border-radius: 7;
+    padding: 3px;
+]])
+mip.spgauge.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #00DBE5, stop: 0.1 #00B9DB, stop: 0.49 #0098D2, stop: 0.5 #0076C8, stop: 1 #0055BF);
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+    border-radius: 7;
+    padding: 3px;
+]])
+mip.spimage = Geyser.Label:new({
+  name = &quot;spimage&quot;,
+	x=0,y=&quot;20%&quot;,
+  width = &quot;10%&quot;, height = &quot;15%&quot;
+},mip.gauges)
+mip.spimage:setStyleSheet([[
+	border-image: url(&quot;C:/3k-Scripts/Sp.png&quot;);
+]])
+mip.gp1gauge = Geyser.Gauge:new({name=&quot;gp1bar&quot;, x=&quot;10%&quot;,y=&quot;35%&quot;,width=&quot;90%&quot;, height=&quot;15%&quot;},mip.gauges)
+mip.gp1gauge.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #98f041, stop: 0.1 #8cf029, stop: 0.49 #66cc00, stop: 0.5 #52a300, stop: 1 #66cc00);
+    border-top: 1px black solid;
+    border-left: 1px black solid;
+    border-bottom: 1px black solid;
+    border-radius: 7;
+    padding: 3px;
+]])
+mip.gp1gauge.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #78bd33, stop: 0.1 #6ebd20, stop: 0.49 #4c9900, stop: 0.5 #387000, stop: 1 #4c9900);
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+    border-radius: 7;
+    padding: 3px;
+]])
+mip.gp1image = Geyser.Label:new({
+  name = &quot;gp1image&quot;,
+	x=0,y=&quot;35%&quot;,
+  width = &quot;10%&quot;, height = &quot;15%&quot;
+},mip.gauges)
+mip.gp1image:setStyleSheet([[
+	border-image: url(&quot;C:/3k-Scripts/gp1.png&quot;);
+]])
+mip.gp2gauge = Geyser.Gauge:new({name=&quot;gp2bar&quot;, x=&quot;10%&quot;,y=&quot;50%&quot;,width=&quot;90%&quot;, height=&quot;15%&quot;},mip.gauges)
+mip.gp2gauge.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #E50097, stop: 0.1 #DB007D, stop: 0.49 #D20063, stop: 0.5 #C80049, stop: 1 #BF002F);
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+    border-radius: 7;
+    padding: 3px;]])
+mip.gp2gauge.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #E500E0, stop: 0.1 #DB00BC, stop: 0.49 #D20099, stop: 0.5 #C80076, stop: 1 #BF0053);
+    border-top: 1px black solid;
+    border-left: 1px black solid;
+    border-bottom: 1px black solid;
+    border-radius: 7;
+    padding: 3px;]])
+mip.gp2image = Geyser.Label:new({
+  name = &quot;gp2image&quot;,
+	x=0,y=&quot;50%&quot;,
+  width = &quot;10%&quot;, height = &quot;15%&quot;
+},mip.gauges)
+mip.gp2image:setStyleSheet([[
+	border-image: url(&quot;C:/3k-Scripts/gp2.png&quot;);
+]])
+mip.enemygauge = Geyser.Gauge:new({name=&quot;enemybar&quot;, x=&quot;10%&quot;,y=&quot;65%&quot;,width=&quot;90%&quot;, height=&quot;15%&quot;},mip.gauges)
+mip.enemygauge.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f04141, stop: 0.1 #ef2929, stop: 0.49 #cc0000, stop: 0.5 #a40000, stop: 1 #cc0000);
+    border-top: 1px black solid;
+    border-left: 1px black solid;
+    border-bottom: 1px black solid;
+    border-radius: 7;
+    padding: 3px;]])
+mip.enemygauge.back:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #bd3333, stop: 0.1 #bd2020, stop: 0.49 #990000, stop: 0.5 #700000, stop: 1 #990000);
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+    border-radius: 7;
+    padding: 3px;]])
+mip.enemyimage = Geyser.Label:new({
+  name = &quot;enemyimage&quot;,
+	x=0,y=&quot;65%&quot;,
+  width = &quot;10%&quot;, height = &quot;15%&quot;
+},mip.gauges)
+mip.enemyimage:setStyleSheet([[
+	border-image: url(&quot;C:/3k-Scripts/Enemy.png&quot;);
+]])
+mip.glineinfo = Geyser.MiniConsole:new({
+      name=&quot;gline1con&quot;,
+		x=0,
+		y=h-25,
+		width=w,
+		height=25,
+    })
+mip.glineinfo:setColor(&quot;black&quot;)
+mip.colorMap = {r=&quot;red&quot;, y=&quot;yellow&quot;, g=&quot;green&quot;, c=&quot;cyan&quot;, v=&quot;violet&quot;}
+mip:updateHpbar()
+end
+registerAnonymousEventHandler(&quot;sysWindowResizeEvent&quot;, &quot;resetSize&quot;)
+resetSize()</script>
+                <eventHandlerList>
+                    <string>sysWindowResizeEvent</string>
+                </eventHandlerList>
             </Script>
             <Script isActive="yes" isFolder="no">
                 <name>Chat Monitor</name>
@@ -303,7 +428,7 @@ mip.chatwindow = Geyser.MiniConsole:new({
 setWindowWrap(&quot;mipchatwindow&quot;, 25)</script>
                 <eventHandlerList/>
             </Script>
-            <Script isActive="no" isFolder="no">
+            <Script isActive="yes" isFolder="no">
                 <name>Prompt Stuff</name>
                 <packageName></packageName>
                 <script>-------------------------------------------------
