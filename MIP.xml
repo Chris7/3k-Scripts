@@ -133,7 +133,7 @@ end
 if (getModulePath and getModulePath(&quot;MIP&quot;)) then
 	mip.basedir = getModulePath(&quot;MIP&quot;)
 else
-	mip.basedir = &quot;C:/3K-Scripts/&quot;
+	mip.basedir = &quot;C:/3K-Scripts&quot;
 end</script>
                 <eventHandlerList/>
             </Script>
@@ -342,7 +342,7 @@ mip.hpimage = Geyser.Label:new({
 	x=0,
   width = &quot;10%&quot;, height = &quot;15%&quot;
 },mip.gauges)
-mip.hpimage:setStyleSheet(string.format([[&quot;border-image: url(&quot;%s//Health.png&quot;);]],mip.basedir))
+mip.hpimage:setStyleSheet(string.format([[border-image: url(&quot;%s/Health.png&quot;);]],mip.basedir))
 mip.spgauge = Geyser.Gauge:new({name=&quot;spbar&quot;, x=&quot;10%&quot;,y=&quot;20%&quot;,width=&quot;90%&quot;, height=&quot;15%&quot;},mip.gauges)
 mip.spgauge.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #00A5E5, stop: 0.1 #017BDB, stop: 0.49 #0252D2, stop: 0.5 #0329C8, stop: 1 #0500BF);
     border-top: 1px black solid;
@@ -363,7 +363,7 @@ mip.spimage = Geyser.Label:new({
 	x=0,y=&quot;20%&quot;,
   width = &quot;10%&quot;, height = &quot;15%&quot;
 },mip.gauges)
-mip.spimage:setStyleSheet(string.format([[&quot;border-image: url(&quot;%s//Sp.png&quot;);]],mip.basedir))
+mip.spimage:setStyleSheet(string.format([[border-image: url(&quot;%s/Sp.png&quot;);]],mip.basedir))
 mip.gp1gauge = Geyser.Gauge:new({name=&quot;gp1bar&quot;, x=&quot;10%&quot;,y=&quot;35%&quot;,width=&quot;90%&quot;, height=&quot;15%&quot;},mip.gauges)
 mip.gp1gauge.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #98f041, stop: 0.1 #8cf029, stop: 0.49 #66cc00, stop: 0.5 #52a300, stop: 1 #66cc00);
     border-top: 1px black solid;
@@ -384,7 +384,7 @@ mip.gp1image = Geyser.Label:new({
 	x=0,y=&quot;35%&quot;,
   width = &quot;10%&quot;, height = &quot;15%&quot;
 },mip.gauges)
-mip.gp1image:setStyleSheet(string.format([[&quot;border-image: url(&quot;%s//gp1.png&quot;);]],mip.basedir))
+mip.gp1image:setStyleSheet(string.format([[border-image: url(&quot;%s/gp1.png&quot;);]],mip.basedir))
 mip.gp2gauge = Geyser.Gauge:new({name=&quot;gp2bar&quot;, x=&quot;10%&quot;,y=&quot;50%&quot;,width=&quot;90%&quot;, height=&quot;15%&quot;},mip.gauges)
 mip.gp2gauge.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #E50097, stop: 0.1 #DB007D, stop: 0.49 #D20063, stop: 0.5 #C80049, stop: 1 #BF002F);
     border-width: 1px;
@@ -403,7 +403,7 @@ mip.gp2image = Geyser.Label:new({
 	x=0,y=&quot;50%&quot;,
   width = &quot;10%&quot;, height = &quot;15%&quot;
 },mip.gauges)
-mip.gp2image:setStyleSheet(string.format([[&quot;border-image: url(&quot;%s//gp2.png&quot;);]],mip.basedir))
+mip.gp2image:setStyleSheet(string.format([[border-image: url(&quot;%s/gp2.png&quot;);]],mip.basedir))
 mip.enemygauge = Geyser.Gauge:new({name=&quot;enemybar&quot;, x=&quot;10%&quot;,y=&quot;65%&quot;,width=&quot;90%&quot;, height=&quot;15%&quot;},mip.gauges)
 mip.enemygauge.front:setStyleSheet([[background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f04141, stop: 0.1 #ef2929, stop: 0.49 #cc0000, stop: 0.5 #a40000, stop: 1 #cc0000);
     border-top: 1px black solid;
@@ -422,7 +422,7 @@ mip.enemyimage = Geyser.Label:new({
 	x=0,y=&quot;65%&quot;,
   width = &quot;10%&quot;, height = &quot;15%&quot;
 },mip.gauges)
-mip.enemyimage:setStyleSheet(string.format([[&quot;border-image: url(&quot;%s//Enemy.png&quot;);]],mip.basedir))
+mip.enemyimage:setStyleSheet(string.format([[border-image: url(&quot;%s/Enemy.png&quot;);]],mip.basedir))
 mip.glineinfo = Geyser.MiniConsole:new({
       name=&quot;gline1con&quot;,
 		x=0,
