@@ -1184,6 +1184,17 @@ end</script>
                     <packageName></packageName>
                     <regex>^tmap connectstubs$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Add room speedwalk</name>
+                    <script>if not tmap.mwalList then
+	tmap.mwalkList = {}
+end
+tmap.mwalkList[matches[2]] = tmap.lastId
+tmap:echo(&quot;Added &quot;..matches[2]..&quot;!&quot;)</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^tmap addwalk (.+)$</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
