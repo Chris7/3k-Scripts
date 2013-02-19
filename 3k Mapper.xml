@@ -1186,7 +1186,7 @@ end</script>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>Add room speedwalk</name>
-                    <script>if not tmap.mwalList then
+                    <script>if not tmap.mwalkList then
 	tmap.mwalkList = {}
 end
 tmap.mwalkList[matches[2]] = tmap.lastId
