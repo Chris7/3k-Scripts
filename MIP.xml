@@ -45,7 +45,9 @@ end
 if getCurrentLine() == &quot;&quot; then
 	deleteLine()
 end
-doPrompt()</script>
+if (doPrompt) then
+	doPrompt()
+end</script>
                 <triggerType>0</triggerType>
                 <conditonLineDelta>0</conditonLineDelta>
                 <mStayOpen>0</mStayOpen>
@@ -457,18 +459,6 @@ mip.chatwindow = Geyser.MiniConsole:new({
 		height=200,
     })
 setWindowWrap(&quot;mipchatwindow&quot;, 25)</script>
-                <eventHandlerList/>
-            </Script>
-            <Script isActive="yes" isFolder="no">
-                <name>Prompt Stuff</name>
-                <packageName></packageName>
-                <script>-------------------------------------------------
---         Put your Lua functions here.        --
---                                             --
--- Note that you can also use external Scripts --
--------------------------------------------------
-function doPrompt()
-end</script>
                 <eventHandlerList/>
             </Script>
             <Script isActive="yes" isFolder="no">
