@@ -253,10 +253,8 @@ end</script>
             </Script>
         </ScriptGroup>
     </ScriptPackage>
-    <KeyPackage>
-        <HelpPackage>
-            <helpURL></helpURL>
-            <helpHTML></helpHTML>
-        </HelpPackage>
-    </KeyPackage>
+    <KeyPackage/>
+    <HelpPackage>
+        <helpURL></helpURL>
+    </HelpPackage>
 </MudletPackage>
