@@ -165,7 +165,7 @@ disableTrigger(&quot;spacer&quot;)</script>
                             <integer>1</integer>
                         </regexCodePropertyList>
                     </Trigger>
-                    <Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+                    <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
                         <name>multipleRoomExits</name>
                         <script>local match = matches[2]
 if (match and string.find(match,&quot;§&quot;)) then
@@ -1194,6 +1194,41 @@ tmap:echo(&quot;Added &quot;..matches[2]..&quot;!&quot;)</script>
                     <command></command>
                     <packageName></packageName>
                     <regex>^tmap addwalk (.+)$</regex>
+                </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Delete Area</name>
+                    <script>if not matches[2] then
+	tmap:echo(&quot;Syntax: tmap deleteArea area name&quot;)
+else
+	local atable = getAreaTableSwap()
+	local areacs = matches[2]
+	local area = string.lower(areacs)
+	for i,v in pairs(atable) do
+		if v == areacs then
+			local rooms = getRooms(i)
+			for j,k in pairs(rooms) do
+				deleteRoom(j)
+			end
+			deleteArea(i)
+			tmap:echo(&quot;Area and all rooms in it deleted&quot;)
+			return
+		end
+	end
+	for i,v in pairs(atable) do
+		if v == area then
+			local rooms = getRooms(i)
+			for j,k in pairs(rooms) do
+				deleteRoom(j)
+			end
+			deleteArea(i)
+			tmap:echo(&quot;Area and all rooms in it deleted&quot;)
+			return
+		end
+	end
+end</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^tmap deleteArea\s?(.+)?$</regex>
                 </Alias>
             </AliasGroup>
         </AliasGroup>
