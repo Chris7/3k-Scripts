@@ -2517,8 +2517,9 @@ function tmap:checkCoords(RoomId, dir, roomname, roomdesc)
 				if (location[3] ~= newloc[3]) then
 					tmap.prompter:decisionBox(&quot;Room conflict&quot;, &quot;A room exists in the direction you wish to go.  &lt;br&gt;Press Automove to move the old room, Cancel&lt;br&gt; Creation to cancel movement and manually &lt;br&gt;manage the conflict.&quot;,&quot;Automove&quot;, &quot;Cancel Creation&quot;)
 					tmap.prompter.lastId,tmap.prompter.cid,tmap.prompter.checkedcommand,tmap.prompter.newLoc,tmap.prompter.roomname, tmap.prompter.roomdesc, tmap.prompter.roomexits = tmap.lastId,firstconflict,dir,newloc,roomname,roomdesc,roomexits
+					return firstconflict
 				end
-				return firstconflict
+				return nil
 			end
 		end
 	end	
