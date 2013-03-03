@@ -165,7 +165,7 @@ disableTrigger(&quot;spacer&quot;)</script>
                             <integer>1</integer>
                         </regexCodePropertyList>
                     </Trigger>
-                    <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+                    <Trigger isActive="no" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
                         <name>multipleRoomExits</name>
                         <script>local match = matches[2]
 if (match and string.find(match,&quot;§&quot;)) then
@@ -642,11 +642,11 @@ tmap:onFollow(matches[2])</script>
                     <script>--moves the room you are currently in to a new area
 local Name = matches[2]
 --find the highest current area id
-local areas = getAreaTable()
+local areas = getAreaTableSwap()
 local zoneId = 0
 for i,v in pairs(areas) do
-	if v &gt; zoneId then
-		zoneId = v
+	if i &gt; zoneId then
+		zoneId = i
 	end
 end
 zoneId = zoneId+1
@@ -716,11 +716,11 @@ end</script>
                     <name>Make a brand new area</name>
                     <script>local Name = matches[2]
 --find the highest current area id
-local areas = getAreaTable()
+local areas = getAreaTableSwap()
 local zoneId = 0
 for i,v in pairs(areas) do
-	if v &gt; zoneId then
-		zoneId = v
+	if i &gt; zoneId then
+		zoneId = i
 	end
 end
 zoneId = zoneId+1
@@ -1605,6 +1605,7 @@ end</script>
   local qtindex = 0
   local qtpath = &quot;&quot;
   speedWalking = 1
+  expandAlias(&quot;tmap dirclear&quot;,false)
   tmap.roomsToWalk = speedWalkPath
   for i,v in pairs(speedWalkPath) do
 	for j,k in pairs(exits) do
@@ -2075,9 +2076,8 @@ end</script>
 	end
 	if tSize==1 then
 		for id,_ in pairs(tmap.searchCan) do
-			tmap:onPlayerMove(id)
-			expandAlias(&quot;tmap move &quot;..tmap.comTable,false)
-			tmap.searchMode=nil
+			local rid = tmap:checkExit(id,tmap.comTable[1])
+			tmap:playerFound(rid)
 			return
 		end
 	elseif tSize&gt;0 then
@@ -2098,9 +2098,8 @@ end</script>
 	end
 	if tSize==1 then
 		for id,_ in pairs(tmap.searchCan) do
-			tmap:onPlayerMove(id)
-			tmap.searchMode=nil
-			expandAlias(&quot;tmap move &quot;..tmap.comTable,false)
+			local rid = tmap:checkExit(id,tmap.comTable[1])
+			tmap:playerFound(rid)
 			return
 		end
 	end
@@ -2128,7 +2127,7 @@ function tmap:findWimpy(name,desc,exits)
 			end
 		end
 		if #cand2 == 1 then
-			tmap:onPlayerMove(cand2[1])
+			tmap:playerFound(cand2[1])
 		else
 			tmap:doFind(cand2, desc)
 		end
@@ -2138,11 +2137,13 @@ function tmap:findWimpy(name,desc,exits)
 end
 
 function tmap:playerFound(roomId)
-	tmap:echo(&quot;Found&quot;)
+	tmap:echo(&quot;\nFound Us\n&quot;)
 	tmap:onPlayerMove(roomId)
+	tmap.searchMode=nil
 	tmap.findme = nil
    tmap.roomsToWalk = nil
    tmap.mapspecial = nil
+	tmap.pWimpy=nil
 	tmap.comTable = {}
 end
 
