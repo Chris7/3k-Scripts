@@ -229,17 +229,19 @@ send(&quot;look&quot;)</script>
                     <colorTriggerFgColor>#000000</colorTriggerFgColor>
                     <colorTriggerBgColor>#000000</colorTriggerBgColor>
                     <regexCodeList>
-                        <string>You cannot go</string>
+                        <string>You cannot go (west|east|south|north|up|down|northeast|northwest|southwest|southeast).$</string>
+                        <string>You cannot get it up.$</string>
                     </regexCodeList>
                     <regexCodePropertyList>
-                        <integer>0</integer>
+                        <integer>1</integer>
+                        <integer>1</integer>
                     </regexCodePropertyList>
                 </Trigger>
                 <Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
                     <name>Too dark</name>
                     <script>tmap.roomEntered = true
 if tmap:mapon() then
-	tmap:echo(&quot;TURN ON A LIGHT!!!!!!!!&quot;)
+	tmap:echo(&quot;\nMAPPING IN THE DARK.  TURN ON A LIGHT!!!!!!!!\n&quot;)
 	tmap.exits=&quot;&quot;
 	tmap.roomdesc=&quot;&quot;
 	tmap.roomname=&quot;A Dark Room&quot;
