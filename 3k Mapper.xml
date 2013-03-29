@@ -553,7 +553,12 @@ tmap.mapspecial = nil</script>
                 <Alias isActive="yes" isFolder="no">
                     <name>No HM Portals</name>
                     <script>--set the portals to your map to enable this
-local forbidden = {[137]=99, [5860]=99, [588]=99, [1081]=99, [1361]=99, [33798]=99}
+local forbidden = {[137]=999, [5860]=999, [588]=999, [1081]=999, [1361]=999, [33798]=999}
+if matches[2] then
+	tmap:echo(&quot;&lt;red&gt;HM Portals On&quot;)
+else
+	tmap:echo(&quot;&lt;red&gt;HM Portals Off&quot;)
+end
 for i,v in pairs(forbidden) do
 	if matches[2] then
 		setRoomWeight(i,0)
@@ -563,7 +568,7 @@ for i,v in pairs(forbidden) do
 end</script>
                     <command></command>
                     <packageName></packageName>
-                    <regex>^tmap portalsoff\s?(.+)$</regex>
+                    <regex>^tmap portalsoff(.+)?</regex>
                 </Alias>
                 <Alias isActive="yes" isFolder="no">
                     <name>Set Room Cost</name>
@@ -1232,6 +1237,60 @@ end</script>
                     <packageName></packageName>
                     <regex>^tmap deleteArea\s?(.+)?$</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Configuration</name>
+                    <script>local configOptions = {[&quot;Automatically Connect Exit Stubs&quot;]={&quot;connectStubs&quot;, &quot;boolean&quot;},
+							 [&quot;Use qtrance for speedwalking&quot;]={&quot;qtrance&quot;, &quot;boolean&quot;},
+							 [&quot;Distance between created rooms[multiple of 2]&quot;]={&quot;mapScale&quot;, &quot;number&quot;},
+							 [&quot;Size of created labels&quot;]={&quot;labelSize&quot;, &quot;number&quot;},
+							}
+local choice
+local choices
+if matches[2] then
+	choices = string.split(matches[2],&quot; &quot;)
+	choice = choices[1]
+end
+if choice then
+	local val = {}
+	for i=2,table.size(choices) do
+		table.insert(val,choices[i])
+	end
+	if val then
+		val = table.concat(val,&quot; &quot;)
+		for i,v in pairs(configOptions) do
+			if (v[1] == choice) then
+				val = tmap:checkType(v[2],val)
+				if val then
+					tmap[v[1]] = val
+					tmap:echo(choice..&quot; set to &lt;cyan&gt;&quot;..val)
+				else
+					tmap:echo(&quot;Invalid type, must be a &quot;..v[2])
+				end
+				return
+			end
+		end
+	else
+		for i,v in pairs(configOptions) do
+			if (v[1] == choice) then
+				if v[2] ~= &quot;boolean&quot; then
+					tmap:echo(&quot;Argument is not a toggle, provide a value.&quot;)
+				else
+					tmap[v[1]] = not tmap[v[1]]
+					tmap:echo(choice..&quot; set to &lt;cyan&gt;&quot;..tostring(tmap[v[1]]))
+				end
+				return
+			end
+		end
+	end
+else
+	for i,v in pairs(configOptions) do
+		tmap:echo(string.format(&quot;&lt;green&gt;%50s &lt;red&gt;(%10s) &lt;cyan&gt;%10s&quot;,i,v[1],tostring(tmap[v[1]])))
+	end
+end</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^tmap config\s?(.+)?</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
@@ -1451,6 +1510,22 @@ function tmap:showRoomLabels(mode)
 	return
 end
 
+function tmap:checkType(needed, val)
+	val = string.lower(val)
+	if needed == &quot;booleal&quot; then
+		if val == &quot;true&quot; then
+			return true
+		elseif val == &quot;false&quot; then
+			return false
+		end
+		return nil
+	elseif needed == &quot;number&quot; then
+		return tonumber(val)
+	elseif needed == &quot;string&quot; then
+		return 
+	end
+end
+
 function tmap:mapon()
 	return tmap.mapstatus
 end
@@ -1612,7 +1687,7 @@ end</script>
   for i,v in pairs(speedWalkPath) do
 	for j,k in pairs(exits) do
 		if v==k then
-			if necro then
+			if tmap.qtrance then
 				if qtindex == 0 then
 					qtpath = j..&quot;/&quot;
 				else
@@ -1643,7 +1718,7 @@ end</script>
 	end
     exits = tmap:getAllExits(tmap.lastId)
   end
-  if necro then
+  if tmap.qtrance then
     send(&quot;qtrance &quot;..qtpath)
   end
   tmap.speedwalking = nil
@@ -1674,9 +1749,18 @@ end
 These are variables the user should set to their desired values (keeping in mind numbers should
 stay numbers, etc)
 ]]
-tmap.mapScale = 8 -- distance between rooms
-tmap.connectStubs = false -- if true, autoconnect all exit stubs as we move, else use the alias tmap connectStubs
-tmap.labelSize = 12 -- default label size
+if not tmap.mapScale then
+	tmap.mapScale = 8 -- distance between rooms
+end
+if not tmap.connectStubs then
+	tmap.connectStubs = false -- if true, autoconnect all exit stubs as we move, else use the alias tmap connectStubs
+end
+if not tmap.labelSize then
+	tmap.labelSize = 12 -- default label size
+end
+if not tmap.qtrance then
+	tmap.qtrance = false -- true to use qtrance for speedwalks
+end
 
 
 --Variables that shouldn't be touched, things that shouldn't change
@@ -2517,9 +2601,8 @@ function tmap:checkCoords(RoomId, dir, roomname, roomdesc)
 				if (location[3] ~= newloc[3]) then
 					tmap.prompter:decisionBox(&quot;Room conflict&quot;, &quot;A room exists in the direction you wish to go.  &lt;br&gt;Press Automove to move the old room, Cancel&lt;br&gt; Creation to cancel movement and manually &lt;br&gt;manage the conflict.&quot;,&quot;Automove&quot;, &quot;Cancel Creation&quot;)
 					tmap.prompter.lastId,tmap.prompter.cid,tmap.prompter.checkedcommand,tmap.prompter.newLoc,tmap.prompter.roomname, tmap.prompter.roomdesc, tmap.prompter.roomexits = tmap.lastId,firstconflict,dir,newloc,roomname,roomdesc,roomexits
-					return firstconflict
 				end
-				return nil
+				return firstconflict
 			end
 		end
 	end	
