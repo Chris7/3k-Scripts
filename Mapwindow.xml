@@ -84,7 +84,7 @@ function mapwin:create()
     if tab == &quot;Map&quot; then
  	mapwin.windows[tab] = Geyser.Mapper:new({
       x = sx,
-      y = sy+mapwin.labelHeight,
+      y = sy,
       height = mapwin.height,
       width = mapwin.width,
       name = string.format(&quot;mapwin%s&quot;, tab),
