@@ -294,6 +294,9 @@ function mip:updateHpbar()
 	end
 	if (mip.gline1 or mip.glone2) then	
 		clearWindow(&quot;gline1con&quot;)
+		if customGline then
+			mip.glineinfo:cecho(customGline())
+		end
 		if (mip.gline1) then
 			local gstr = mip:doColor(mip.gline1)
 			mip.glineinfo:cecho(gstr..&quot; | &quot;)--string.sub(gstr,1,string.len(gstr)))
