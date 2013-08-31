@@ -443,8 +443,12 @@ end</script>
                 <Alias isActive="yes" isFolder="no">
                     <name>Show Exits</name>
                     <script>--show room exits
-tmap:echo(getRoomExits(tmap.lastId))
-tmap:echo(&quot;special exits:\n&quot;)
+local exits = getRoomExits(tmap.lastId)
+echo(&quot;Normal Exits:\n&quot;)
+for k,v in pairs(exits) do
+  echo(&quot;   &quot; .. k .. &quot; -&gt; &quot; .. v .. &quot;\n&quot;)
+end
+tmap:echo(&quot;Special Exits:\n&quot;)
 tmap:echo(getSpecialExitsSwap(tmap.lastId))</script>
                     <command></command>
                     <packageName></packageName>
