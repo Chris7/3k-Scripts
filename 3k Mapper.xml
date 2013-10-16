@@ -1299,6 +1299,40 @@ end</script>
                     <packageName></packageName>
                     <regex>^tmap config\s?(.+)?</regex>
                 </Alias>
+                <Alias isActive="yes" isFolder="no">
+                    <name>Merge Room</name>
+                    <script>--this is basically a way to delete a room and clean up the exits to this new room
+local dir
+if matches[2] then
+	dir = matches[2]
+	--get the room in the given direction
+	local mergeroomid = tmap:getClosestRoom(tmap.lastId, dir)[0]
+	local exits = tmap:getAllExits(tmap.lastId)
+	if mergeroomid then
+		--sever exits of the rooms we connect to to this room
+		for exit,roomid in pairs(exits) do
+			local exits2 = tmap:getAllExits(roomid)
+			for exit2,roomid2 in pairs(exits2) do
+				if roomid2 == tmap.lastId then
+				--sever the exit
+					setExit(roomid, -1, exit2)
+				end
+			end
+		end
+		--all exits to this room severed
+		--remove this room, move player to new roomx
+		deleteRoom(tmap.lastId)
+		tmap:onPlayerMove(mergeroomid)
+	else
+		tmap:echo(&quot;Cannot find a valid room in given direction.&quot;)
+	end
+else
+	tmap:echo(&quot;&lt;red&gt;Merge usage: &lt;cyan&gt;tmap merge &lt;direction&gt;&lt;red&gt; will merge your current room to the given direction&quot;)
+end</script>
+                    <command></command>
+                    <packageName></packageName>
+                    <regex>^tmap merge\s?(.+)?</regex>
+                </Alias>
             </AliasGroup>
         </AliasGroup>
     </AliasPackage>
@@ -2663,6 +2697,28 @@ function tmap:getCoordsOfDir(roomID, dir)
 	local location = {tmap.lastx,tmap.lasty,tmap.lastz}
 	local newloc = tmap:add_arrays(location, dirlocation)
 	return {newloc[1],newloc[2],newloc[3],dirtype}
+end
+
+function tmap:getClosestRoom(roomID, dir)
+	--takes a room id and a direction and returns
+	--the room id of the closest room in a given direction from
+	--the supplied room
+	local dirtype=tmap.dirtypes[dir]
+	if dirtype == nil then
+		return nil
+	end
+	local dirlocation = tmap.unitVectors[dirtype]
+	local location = {getRoomCoordinates(roomID)}
+	local newloc = tmap:add_arrays(location, dirlocation)
+	local aid = getRoomArea(roomID)
+	local newRoom = getRoomsByPosition(aid, newloc[1],newloc[2],newloc[3])
+	local iterations = 0
+	while not next(newRoom) and iterations &lt; 50 do
+		iterations = iterations+1
+		newloc = tmap:add_arrays(newloc, dirlocation)
+		newRoom = getRoomsByPosition(aid, newloc[1],newloc[2],newloc[3])
+	end
+	return newRoom
 end
 
 function tmap:checkExit(roomId, dir)
