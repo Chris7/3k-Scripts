@@ -593,7 +593,7 @@ tmap:echo(tmap:getRoomScript(tmap.lastId))</script>
                 <Alias isActive="yes" isFolder="no">
                     <name>Delete Selected Rooms</name>
                     <script>for i,v in pairs(tmap.roomsToDelete) do
-	if v == tmap.last.id then
+	if v == tmap.lastId then
 		tmap:echo(&quot;&lt;red&gt; Unable to delete the room you are in.&quot;)
 	else
 		tmap:doRoomDelete(i)
